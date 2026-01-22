@@ -22,7 +22,10 @@ class ProcessTimeline {
             connectionPadding: 0.3,
             textColor: '#333333',
             fontFamily: '-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif',
-            bubbleHoverScale: 1.05
+            bubbleHoverScale: 1.05,
+            indicatorStyle: 'circle-dot',
+            indicatorSize: 0.4,
+            indicatorColor: '#999999'
         };
         // Keep a working copy of timeline steps for editing
         this.timelineSteps = JSON.parse(JSON.stringify(window.TIMELINE_STEPS || []));
@@ -174,6 +177,34 @@ class ProcessTimeline {
             });
         }
 
+        // Indicator style
+        const indicatorStyle = document.getElementById('indicator-style');
+        if (indicatorStyle) {
+            indicatorStyle.addEventListener('change', (e) => {
+                this.settings.indicatorStyle = e.target.value;
+                this.render();
+            });
+        }
+
+        // Indicator size
+        const indicatorSize = document.getElementById('indicator-size');
+        if (indicatorSize) {
+            indicatorSize.addEventListener('input', (e) => {
+                this.settings.indicatorSize = parseFloat(e.target.value);
+                e.target.nextElementSibling.textContent = e.target.value;
+                this.render();
+            });
+        }
+
+        // Indicator color
+        const indicatorColor = document.getElementById('indicator-color');
+        if (indicatorColor) {
+            indicatorColor.addEventListener('input', (e) => {
+                this.settings.indicatorColor = e.target.value;
+                this.render();
+            });
+        }
+
         // Reset button
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
@@ -311,6 +342,7 @@ class ProcessTimeline {
 
         if (hasPreface) {
             document.getElementById('edit-preface-label').value = step.preface.label;
+            document.getElementById('edit-preface-size').value = step.preface.fontSize || 'M';
             document.getElementById('edit-preface-lineX').value = step.preface.lineX;
             document.getElementById('edit-preface-lineY').value = step.preface.lineY;
             document.getElementById('edit-preface-anchor').value = step.preface.anchor || 0;
@@ -328,6 +360,7 @@ class ProcessTimeline {
 
         if (hasClient) {
             document.getElementById('edit-client-label').value = step.client.label;
+            document.getElementById('edit-client-size').value = step.client.fontSize || 'M';
             document.getElementById('edit-client-lineX').value = step.client.lineX;
             document.getElementById('edit-client-lineY').value = step.client.lineY;
             document.getElementById('edit-client-anchor').value = step.client.anchor || 0;
@@ -364,6 +397,7 @@ class ProcessTimeline {
         if (hasPreface) {
             step.preface = {
                 label: document.getElementById('edit-preface-label').value,
+                fontSize: document.getElementById('edit-preface-size').value,
                 lineX: parseFloat(document.getElementById('edit-preface-lineX').value),
                 lineY: parseFloat(document.getElementById('edit-preface-lineY').value),
                 anchor: parseFloat(document.getElementById('edit-preface-anchor').value)
@@ -373,6 +407,7 @@ class ProcessTimeline {
         if (hasClient) {
             step.client = {
                 label: document.getElementById('edit-client-label').value,
+                fontSize: document.getElementById('edit-client-size').value,
                 lineX: parseFloat(document.getElementById('edit-client-lineX').value),
                 lineY: parseFloat(document.getElementById('edit-client-lineY').value),
                 anchor: parseFloat(document.getElementById('edit-client-anchor').value)
@@ -469,14 +504,16 @@ class ProcessTimeline {
 
                 if (step.preface) {
                     const label = step.preface.label.replace(/\n/g, '\\n');
-                    output += `    preface: { label: '${label}', lineX: ${step.preface.lineX}, lineY: ${step.preface.lineY}, anchor: ${step.preface.anchor} }`;
+                    const size = step.preface.fontSize || 'M';
+                    output += `    preface: { label: '${label}', fontSize: '${size}', lineX: ${step.preface.lineX}, lineY: ${step.preface.lineY}, anchor: ${step.preface.anchor} }`;
                     if (step.client) output += `,\n`;
                     else output += `\n`;
                 }
 
                 if (step.client) {
                     const label = step.client.label.replace(/\n/g, '\\n');
-                    output += `    client: { label: '${label}', lineX: ${step.client.lineX}, lineY: ${step.client.lineY}, anchor: ${step.client.anchor} }\n`;
+                    const size = step.client.fontSize || 'M';
+                    output += `    client: { label: '${label}', fontSize: '${size}', lineX: ${step.client.lineX}, lineY: ${step.client.lineY}, anchor: ${step.client.anchor} }\n`;
                 }
             } else {
                 output += `\n`;
@@ -548,7 +585,10 @@ class ProcessTimeline {
             connectionPadding: 0.3,
             textColor: '#333333',
             fontFamily: '-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif',
-            bubbleHoverScale: 1.05
+            bubbleHoverScale: 1.05,
+            indicatorStyle: 'circle-dot',
+            indicatorSize: 0.4,
+            indicatorColor: '#999999'
         };
 
         // Update inputs
@@ -570,6 +610,10 @@ class ProcessTimeline {
         document.getElementById('font-family').value = this.settings.fontFamily;
         document.getElementById('bubble-hover-scale').value = this.settings.bubbleHoverScale;
         document.getElementById('bubble-hover-scale').nextElementSibling.textContent = this.settings.bubbleHoverScale;
+        document.getElementById('indicator-style').value = this.settings.indicatorStyle;
+        document.getElementById('indicator-size').value = this.settings.indicatorSize;
+        document.getElementById('indicator-size').nextElementSibling.textContent = this.settings.indicatorSize;
+        document.getElementById('indicator-color').value = this.settings.indicatorColor;
 
         // Apply settings
         this.updateStyles();
@@ -821,27 +865,56 @@ class ProcessTimeline {
                 break;
         }
 
-        // Calculate line endpoint with padding before text
-        // Estimate text dimensions (approximate based on font size and content)
-        const fontSize = 0.3;
+        // Map font size setting to numeric value
+        const sizeMap = { 'S': 0.2, 'M': 0.3, 'L': 0.4, 'XL': 0.5 };
+        const fontSize = sizeMap[task.fontSize] || sizeMap['M'];
+
         const textLines = task.label.split('\n');
         const longestLine = textLines.reduce((max, line) => line.length > max.length ? line : max, '');
-        const approxTextWidth = longestLine.length * fontSize * 0.6; // Rough character width estimate
-        const approxTextHeight = textLines.length * fontSize * 1.2; // Line height estimate
 
-        // Calculate direction vector from start to label
-        const dx = labelX - startX;
-        const dy = labelY - startY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const dirX = dx / distance;
-        const dirY = dy / distance;
+        // Calculate Precise Bounding Box
+        // charWidth is approx 0.6 of fontSize. Line height is 1.2.
+        const charWidth = fontSize * 0.6;
+        const lineHeight = fontSize * 1.2;
 
-        // Calculate padding distance (text half-width + padding)
-        const paddingDistance = (approxTextWidth / 2) + this.settings.connectionPadding;
+        const rectW = longestLine.length * charWidth;
+        const rectH = textLines.length * lineHeight;
 
-        // Calculate new endpoint
-        const endX = labelX - (dirX * paddingDistance);
-        const endY = labelY - (dirY * paddingDistance);
+        // Bounding box is centered on (labelX, labelY)
+        const halfW = rectW / 2;
+        const halfH = rectH / 2;
+
+        // Calculate intersection of line from (startX, startY) to (labelX, labelY) with the rect
+        const dxLine = labelX - startX;
+        const dyLine = labelY - startY;
+        const angleLine = Math.atan2(dyLine, dxLine);
+
+        // Find distance from (labelX, labelY) to rect edge along angleLine-PI
+        // We use the reverse angle because we want the distance from the center of the text to the edge
+        const revAngle = angleLine + Math.PI;
+        const cos = Math.cos(revAngle);
+        const sin = Math.sin(revAngle);
+
+        // Calculate distance to horizontal and vertical edges
+        let dBox = 0;
+        if (Math.abs(cos) * halfH > Math.abs(sin) * halfW) {
+            // Intersects vertical edge
+            dBox = halfW / Math.abs(cos);
+        } else {
+            // Intersects horizontal edge
+            dBox = halfH / Math.abs(sin);
+        }
+
+        // Add padding
+        const paddingDistance = dBox + this.settings.connectionPadding;
+
+        // Calculate new endpoint (startX/startY to endX/endY)
+        // Distance from start to label
+        const distToLabel = Math.sqrt(dxLine * dxLine + dyLine * dyLine);
+        const shrinkFactor = (distToLabel - paddingDistance) / distToLabel;
+
+        const endX = startX + dxLine * Math.max(0, shrinkFactor);
+        const endY = startY + dyLine * Math.max(0, shrinkFactor);
 
         // Connection Line
         const line = this.createLine(
@@ -854,11 +927,80 @@ class ProcessTimeline {
         line.setAttribute('stroke', this.settings.connectionColor);
         svg.appendChild(line);
 
+        // Indicator Icon at start point (where line touches bubble)
+        this.renderIndicator(svg, startX, startY, this.settings.indicatorStyle, this.settings.indicatorColor);
+
         // Label Text
-        const label = this.createText(labelX, labelY, task.label, 0.3);
+        const label = this.createText(labelX, labelY, task.label, fontSize);
         label.classList.add('label-text');
         label.setAttribute('fill', this.settings.textColor);
+
+        // Vertically center the text block manually if multi-line
+        if (textLines.length > 1) {
+            // The default createText adds tspans starting at labelY
+            // To center, we should shift the first tspan
+            const firstTspan = label.querySelector('tspan');
+            if (firstTspan) {
+                const totalHeight = (textLines.length - 1) * 1.2; // in em unit approx
+                // This is tricky with SVG units. 
+                // Alternatively, we just offset the text element's Y
+                const yOffset = -(textLines.length - 1) * fontSize * 1.2 / 2;
+                label.setAttribute('transform', `translate(0, ${yOffset}) text-anchor="middle"`);
+            }
+        } else {
+            label.setAttribute('dominant-baseline', 'middle');
+            label.setAttribute('text-anchor', 'middle');
+        }
+
         svg.appendChild(label);
+    }
+
+    renderIndicator(svg, x, y, style, color) {
+        if (style === 'none') return;
+
+        const size = this.settings.indicatorSize;
+
+        switch (style) {
+            case 'circle-dot':
+                const outer = this.createCircle(x, y, size, 'none');
+                outer.setAttribute('stroke', color);
+                outer.setAttribute('stroke-width', 0.05);
+                svg.appendChild(outer);
+
+                const dot = this.createCircle(x, y, 0.1, color);
+                svg.appendChild(dot);
+                break;
+
+            case 'solid-circle':
+                const solid = this.createCircle(x, y, size, color);
+                svg.appendChild(solid);
+                break;
+
+            case 'hollow-circle':
+                const hollow = this.createCircle(x, y, size, 'none');
+                hollow.setAttribute('stroke', color);
+                hollow.setAttribute('stroke-width', 0.08);
+                svg.appendChild(hollow);
+                break;
+
+            case 'square':
+                const square = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                square.setAttribute('x', x - size);
+                square.setAttribute('y', y - size);
+                square.setAttribute('width', size * 2);
+                square.setAttribute('height', size * 2);
+                square.setAttribute('fill', color);
+                svg.appendChild(square);
+                break;
+
+            case 'diamond':
+                const diamond = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                const points = `${x},${y - size * 1.2} ${x + size * 1.2},${y} ${x},${y + size * 1.2} ${x - size * 1.2},${y}`;
+                diamond.setAttribute('points', points);
+                diamond.setAttribute('fill', color);
+                svg.appendChild(diamond);
+                break;
+        }
     }
 
     getBubbleSize(sizeLevel) {

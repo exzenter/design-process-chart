@@ -212,6 +212,16 @@
             </div>
 
             <div class="setting-item">
+              <label>Font Size</label>
+              <select id="edit-preface-size">
+                <option value="S">S (Small)</option>
+                <option value="M">M (Medium)</option>
+                <option value="L">L (Large)</option>
+                <option value="XL">XL (Extra Large)</option>
+              </select>
+            </div>
+
+            <div class="setting-item">
               <label>Line X</label>
               <input type="number" id="edit-preface-lineX" step="0.5" min="0" max="50">
             </div>
@@ -246,6 +256,16 @@
               <label>Label</label>
               <textarea id="edit-client-label" rows="3"
                 placeholder="Multi-line text (use Enter for new lines)"></textarea>
+            </div>
+
+            <div class="setting-item">
+              <label>Font Size</label>
+              <select id="edit-client-size">
+                <option value="S">S (Small)</option>
+                <option value="M">M (Medium)</option>
+                <option value="L">L (Large)</option>
+                <option value="XL">XL (Extra Large)</option>
+              </select>
             </div>
 
             <div class="setting-item">
@@ -378,6 +398,26 @@
         <div class="setting-item">
           <label>Color</label>
           <input type="color" id="text-color" value="#333333">
+        </div>
+        <div class="setting-item">
+          <label>Indicator Style</label>
+          <select id="indicator-style">
+            <option value="none">None</option>
+            <option value="circle-dot" selected>Circle Dot</option>
+            <option value="solid-circle">Solid Circle</option>
+            <option value="hollow-circle">Hollow Circle</option>
+            <option value="square">Square</option>
+            <option value="diamond">Diamond</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Indicator Size</label>
+          <input type="range" id="indicator-size" min="0.1" max="1" step="0.05" value="0.4">
+          <span class="value-display">0.4</span>
+        </div>
+        <div class="setting-item">
+          <label>Indicator Color</label>
+          <input type="color" id="indicator-color" value="#999999">
         </div>
         <div class="setting-item">
           <label>Font Family</label>

@@ -2,16 +2,17 @@
 
 A dynamic, interactive timeline visualization tool for design processes. Built with SVG, CSS, and Vanilla JavaScript, it allows designers and clients to visualize project phases and tasks in a beautiful, responsive chart.
 
-![Design Process Chart Preview](file:///C:/Users/moijto/.gemini/antigravity/brain/5b74e4cb-e274-4675-9c1f-5f8e7550fec8/bubble_editor_demo_1769116779115.webp)
 
 ## Features
 
 - **Dual View Modes**: Switch between Horizontal and Vertical timeline layouts.
-- **Interactive Visualization**: Hover effects and click interactions for bubbles.
+- **Interactive Visualization**: Hover effects (configurable scaling) and click interactions for bubbles.
 - **Customizable Visuals**: Floating settings panel to control:
   - Phase colors
   - Timeline line thickness and color
   - Connection line styles (solid, dashed, dotted)
+  - Description font sizes (S, M, L, XL)
+  - Connection indicator icons (Circle Dot, Square, Diamond, etc.)
   - Text padding and font family
   - Adjustable bubble hover scaling
 - **Built-in Editor**: Edit individual bubbles in real-time on the left panel:
@@ -56,7 +57,4 @@ The bubbles are defined in the `TIMELINE_STEPS` array:
 
 ## License
 
-© Preface Studios Limited
-
----
-*Created for Preface Studios to visualize the website design and development journey.*
+EXZENT 
