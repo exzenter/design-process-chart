@@ -4,106 +4,95 @@
 // anchor: -1 (left/top) to 1 (right/bottom) shift on bubble circumference
 
 const TIMELINE_STEPS = [
-  // CONTACT Phase
   {
     id: 'step-1', phase: 'contact', x: 2, size: 2,
-    preface: { label: 'Intro Meeting', lineX: 2, lineY: -7, anchor: 0 },
-    client: { label: 'Needs Assessment', lineX: 2, lineY: 7, anchor: 0 }
+    preface: { label: 'Intro Meeting', fontSize: 'M', fontWeight: 'regular', lineX: 2, lineY: -7, anchor: 0 },
+    client: { label: 'Needs Assessment', fontSize: 'M', fontWeight: 'regular', lineX: 2, lineY: 7, anchor: 0 }
   },
-
-  // DISCOVERY Phase
   {
     id: 'step-2', phase: 'discovery', x: 7, size: 2,
-    preface: { label: 'Research', lineX: 6, lineY: -8, anchor: -0.5 },
-    client: { label: 'Needs Assessment\nFeedback', lineX: 6, lineY: 7, anchor: -0.3 }
+    preface: { label: 'Research', fontSize: 'M', fontWeight: 'regular', lineX: 6, lineY: -8, anchor: -0.5 },
+    client: { label: 'Needs Assessment\nFeedback', fontSize: 'M', fontWeight: 'regular', lineX: 6, lineY: 7, anchor: -0.3 }
   },
   {
     id: 'step-3', phase: 'discovery', x: 9, size: 2,
-    client: { label: 'Draft\nIdeas', lineX: 9, lineY: 8, anchor: 0 }
+    client: { label: 'Draft\nIdeas', fontSize: 'M', fontWeight: 'regular', lineX: 9, lineY: 8, anchor: 0 }
   },
   {
-    id: 'step-4', phase: 'discovery', x: 10, size: 2,
-    preface: { label: 'Site Map\nWireframes', lineX: 10, lineY: -7.5, anchor: 0 }
+    id: 'step-4', phase: 'discovery', x: 10.7, size: 100,
+    preface: { label: 'Site Map\nWireframes', fontSize: 'M', fontWeight: 'regular', lineX: 10, lineY: -7.5, anchor: 0 }
   },
   {
-    id: 'step-5', phase: 'discovery', x: 13, size: 2,
-    preface: { label: 'UX Position\nBrand', lineX: 13, lineY: -8.5, anchor: 0 }
-  },
-
-  // CONTENT Phase
-  {
-    id: 'step-6', phase: 'content', x: 15.5, size: 2,
-    client: { label: 'UX Design +\nWireframes\nReview', lineX: 15, lineY: 8, anchor: -0.2 }
+    id: 'step-5', phase: 'discovery', x: 13.1, size: 53,
+    preface: { label: 'UX Position\nBrand', fontSize: 'M', fontWeight: 'regular', lineX: 13, lineY: -8.5, anchor: 0 }
   },
   {
-    id: 'step-7', phase: 'content', x: 17, size: 2,
-    preface: { label: 'Template Pages\nUI Design', lineX: 17, lineY: -8.5, anchor: 0 }
+    id: 'step-6', phase: 'content', x: 15.6, size: 29.5,
+    client: { label: 'UX Design +\nWireframes\nReview', fontSize: 'M', fontWeight: 'regular', lineX: 15, lineY: 8, anchor: -0.2 }
   },
   {
-    id: 'step-8', phase: 'content', x: 19, size: 2,
-    client: { label: 'Template Pages\nUI Design Review', lineX: 19, lineY: 8.5, anchor: 0 }
+    id: 'step-7', phase: 'content', x: 17, size: 17,
+    preface: { label: 'Template Pages\nUI Design', fontSize: 'M', fontWeight: 'regular', lineX: 17, lineY: -8.5, anchor: 0 }
   },
   {
-    id: 'step-9', phase: 'content', x: 20.5, size: 2,
-    preface: { label: 'Build\nReal CSS Theme\nPrototype', lineX: 21, lineY: -7.5, anchor: 0.2 }
-  },
-
-  // CODING Phase
-  {
-    id: 'step-10', phase: 'coding', x: 23, size: 2,
-    client: { label: 'Prototype\nFeedback', lineX: 23, lineY: 7.5, anchor: 0 }
+    id: 'step-8', phase: 'content', x: 18.8, size: 27.5,
+    client: { label: 'Template Pages\nUI Design Review', fontSize: 'M', fontWeight: 'regular', lineX: 19, lineY: 8.5, anchor: 0 }
   },
   {
-    id: 'step-11', phase: 'coding', x: 25, size: 3,
-    preface: { label: 'Front & Backend\nCoding', lineX: 25, lineY: -8, anchor: 0 }
+    id: 'step-9', phase: 'content', x: 21.1, size: 18,
+    preface: { label: 'Build\nReal CSS Theme\nPrototype', fontSize: 'M', fontWeight: 'regular', lineX: 21, lineY: -7.5, anchor: 0.2 }
   },
   {
-    id: 'step-12', phase: 'coding', x: 27, size: 2,
-    client: { label: 'Build\nReview', lineX: 27, lineY: 8, anchor: 0 }
+    id: 'step-10', phase: 'coding', x: 23.2, size: 35,
+    client: { label: 'Prototype\nFeedback', fontSize: 'M', fontWeight: 'regular', lineX: 23, lineY: 7.5, anchor: 0 }
   },
   {
-    id: 'step-13', phase: 'coding', x: 29, size: 2,
-    preface: { label: 'Testing &\nWordPress', lineX: 29.5, lineY: -7, anchor: 0.2 }
-  },
-
-  // LAUNCH Phase
-  {
-    id: 'step-14', phase: 'launch', x: 31, size: 2,
-    client: { label: 'Final Review', lineX: 31, lineY: 7.5, anchor: 0 }
+    id: 'step-11', phase: 'coding', x: 25.4, size: 12.5,
+    preface: { label: 'Front & Backend\nCoding', fontSize: 'M', fontWeight: 'regular', lineX: 25, lineY: -8, anchor: 0 }
   },
   {
-    id: 'step-15', phase: 'launch', x: 33, size: 2,
-    preface: { label: 'Cross Platform\nBrowser Testing', lineX: 33, lineY: -8, anchor: 0 }
+    id: 'step-12', phase: 'coding', x: 27.2, size: 17,
+    client: { label: 'Build\nReview', fontSize: 'M', fontWeight: 'regular', lineX: 27, lineY: 8, anchor: 0 }
   },
   {
-    id: 'step-16', phase: 'launch', x: 34.5, size: 2,
-    client: { label: 'Approval\n+ Launch', lineX: 35, lineY: 8, anchor: 0.2 }
+    id: 'step-13', phase: 'coding', x: 29.3, size: 41,
+    preface: { label: 'Testing &\nWordPress', fontSize: 'M', fontWeight: 'black', lineX: 29.1, lineY: -5.6, anchor: 0.64 }
   },
   {
-    id: 'step-17', phase: 'launch', x: 36, size: 2,
-    preface: { label: 'SEO\nWebmaster\nTools', lineX: 36.5, lineY: -7, anchor: 0.2 }
-  },
-
-  // SUPPORT Phase
-  {
-    id: 'step-18', phase: 'support', x: 38, size: 2,
-    client: { label: 'Monitoring\nReporting', lineX: 38, lineY: 7.5, anchor: 0 }
+    id: 'step-14', phase: 'launch', x: 31.1, size: 2,
+    client: { label: 'Final Review', fontSize: 'M', fontWeight: 'regular', lineX: 31, lineY: 7.5, anchor: 0 }
   },
   {
-    id: 'step-19', phase: 'support', x: 40, size: 2,
-    preface: { label: 'Search Engine\nOptimization', lineX: 40, lineY: -7.5, anchor: 0 }
+    id: 'step-15', phase: 'launch', x: 32.9, size: 49,
+    preface: { label: 'Cross Platform\nBrowser Testing', fontSize: '3XL', fontWeight: 'regular', lineX: 33, lineY: -8, anchor: 0 }
   },
   {
-    id: 'step-20', phase: 'support', x: 42, size: 2,
-    client: { label: 'Minor Bug\nFixes & Content\nUpdates', lineX: 42, lineY: 8.5, anchor: 0 }
+    id: 'step-16', phase: 'launch', x: 35, size: 68.5,
+    client: { label: 'Approval\n+ Launch', fontSize: 'M', fontWeight: 'regular', lineX: 35, lineY: 8, anchor: 0.2 }
   },
   {
-    id: 'step-21', phase: 'support', x: 43.5, size: 2,
-    preface: { label: 'Ongoing\nMaintenance/Content', lineX: 43.5, lineY: -7, anchor: 0 }
+    id: 'step-17', phase: 'launch', x: 37.5, size: 34,
+    preface: { label: 'SEO\nWebmaster\nTools', fontSize: '4XL', fontWeight: 'light', lineX: 36.4, lineY: -5.6, anchor: 0.2 }
+  },
+  {
+    id: 'step-18', phase: 'support', x: 39.3, size: 12.5,
+    client: { label: 'Monitoring\nReporting', fontSize: 'M', fontWeight: 'regular', lineX: 38, lineY: 7.5, anchor: 0 }
+  },
+  {
+    id: 'step-19', phase: 'support', x: 40.9, size: 32.5,
+    preface: { label: 'Search Engine\nOptimization', fontSize: 'M', fontWeight: 'regular', lineX: 40, lineY: -7.5, anchor: 0 }
+  },
+  {
+    id: 'step-20', phase: 'support', x: 41.1, size: 6.5,
+    client: { label: 'Minor Bug\nFixes & Content\nUpdates', fontSize: 'M', fontWeight: 'regular', lineX: 42, lineY: 8.5, anchor: 0 }
+  },
+  {
+    id: 'step-21', phase: 'support', x: 43.7, size: 34.5,
+    preface: { label: 'Ongoing\nMaintenance/Content', fontSize: 'M', fontWeight: 'regular', lineX: 43.5, lineY: -7, anchor: 0 }
   },
   {
     id: 'step-22', phase: 'support', x: 45.5, size: 2,
-    client: { label: 'Ongoing Hosting\nSupport & Consultation', lineX: 45.5, lineY: 7.5, anchor: 0 }
+    client: { label: 'Ongoing Hosting\nSupport & Consultation', fontSize: 'M', fontWeight: 'regular', lineX: 45.5, lineY: 7.5, anchor: 0 }
   }
 ];
 
@@ -118,7 +107,5 @@ const PHASES = {
   support: { name: 'SUPPORT', color: '#adb5bd' }
 };
 
-// Create legacy BUBBLES array for compatibility if needed, 
-// though app.js will be updated to use TIMELINE_STEPS directly.
 window.TIMELINE_STEPS = TIMELINE_STEPS;
 window.PHASES = PHASES;

@@ -32,6 +32,22 @@ class ProcessTimeline {
         // Keep a working copy of timeline steps for editing
         this.timelineSteps = JSON.parse(JSON.stringify(window.TIMELINE_STEPS || []));
         this.currentEditId = null;
+
+        // Drag state for editing
+        this.dragState = {
+            isDragging: false,
+            dragType: null, // 'bubble', 'label', or 'indicator'
+            bubbleId: null,
+            taskType: null, // 'preface' or 'client'
+            taskIndex: null, // index in the array
+            startX: 0,
+            startY: 0,
+            originalX: 0,
+            originalY: 0,
+            originalSize: 0,
+            originalAnchor: 0
+        };
+
         this.init();
     }
 
@@ -39,6 +55,7 @@ class ProcessTimeline {
         this.setupEventListeners();
         this.setupSettingsPanel();
         this.setupEditorPanel();
+        this.setupBubbleDrag();
         this.populateBubbleSelector();
         this.render();
     }
@@ -325,6 +342,223 @@ class ProcessTimeline {
         }
     }
 
+    setupBubbleDrag() {
+        const container = document.getElementById('timeline-svg');
+        if (!container) return;
+
+        // Mouse down on bubble, label, or indicator
+        container.addEventListener('mousedown', (e) => {
+            // Only allow drag when editor panel is open and in horizontal mode
+            const editorPanel = document.getElementById('editor-panel');
+            if (!editorPanel.classList.contains('open')) return;
+            if (this.viewMode !== 'horizontal') return;
+
+            e.preventDefault();
+
+            // Check what we're dragging
+            const bubble = e.target.closest('.bubble');
+            const label = e.target.closest('.draggable-label');
+            const indicator = e.target.closest('.draggable-indicator');
+
+            if (bubble) {
+                const bubbleId = bubble.dataset.id;
+                const step = this.timelineSteps.find(s => s.id === bubbleId);
+                if (!step) return;
+
+                this.dragState = {
+                    isDragging: true,
+                    dragType: 'bubble',
+                    bubbleId: bubbleId,
+                    taskType: null,
+                    taskIndex: null,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    originalX: step.x,
+                    originalY: 0,
+                    originalSize: step.size,
+                    originalAnchor: 0
+                };
+
+                // Select this bubble in the editor
+                document.getElementById('bubble-selector').value = bubbleId;
+                this.selectBubble(bubbleId);
+
+            } else if (label) {
+                const stepId = label.dataset.stepId;
+                const taskType = label.dataset.taskType;
+                const taskIndex = parseInt(label.dataset.taskIndex);
+                const step = this.timelineSteps.find(s => s.id === stepId);
+                if (!step) return;
+
+                const taskArray = Array.isArray(step[taskType]) ? step[taskType] : [step[taskType]];
+                const task = taskArray[taskIndex];
+                if (!task) return;
+
+                this.dragState = {
+                    isDragging: true,
+                    dragType: 'label',
+                    bubbleId: stepId,
+                    taskType: taskType,
+                    taskIndex: taskIndex,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    originalX: task.lineX,
+                    originalY: task.lineY,
+                    originalSize: 0,
+                    originalAnchor: 0
+                };
+
+                // Select this bubble in the editor
+                document.getElementById('bubble-selector').value = stepId;
+                this.selectBubble(stepId);
+
+            } else if (indicator) {
+                const stepId = indicator.dataset.stepId;
+                const taskType = indicator.dataset.taskType;
+                const taskIndex = parseInt(indicator.dataset.taskIndex);
+                const step = this.timelineSteps.find(s => s.id === stepId);
+                if (!step) return;
+
+                const taskArray = Array.isArray(step[taskType]) ? step[taskType] : [step[taskType]];
+                const task = taskArray[taskIndex];
+                if (!task) return;
+
+                this.dragState = {
+                    isDragging: true,
+                    dragType: 'indicator',
+                    bubbleId: stepId,
+                    taskType: taskType,
+                    taskIndex: taskIndex,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    originalX: 0,
+                    originalY: 0,
+                    originalSize: 0,
+                    originalAnchor: task.anchor || 0
+                };
+
+                // Select this bubble in the editor
+                document.getElementById('bubble-selector').value = stepId;
+                this.selectBubble(stepId);
+            }
+        });
+
+        // Mouse move - track drag
+        document.addEventListener('mousemove', (e) => {
+            if (!this.dragState.isDragging) return;
+
+            const deltaX = e.clientX - this.dragState.startX;
+            const deltaY = e.clientY - this.dragState.startY;
+
+            // Get SVG dimensions for coordinate conversion
+            const svg = document.querySelector('.timeline-svg');
+            if (!svg) return;
+
+            const svgRect = svg.getBoundingClientRect();
+            const viewBox = svg.viewBox.baseVal;
+            const scaleX = viewBox.width / svgRect.width;
+            const scaleY = viewBox.height / svgRect.height;
+
+            if (this.dragState.dragType === 'bubble') {
+                // Bubble drag: X = position, Y = size
+                const newX = this.dragState.originalX + (deltaX * scaleX);
+                const sizeChange = -(deltaY / 2);
+                let newSize = this.dragState.originalSize + sizeChange;
+                newSize = Math.max(1, Math.min(100, newSize));
+
+                const step = this.timelineSteps.find(s => s.id === this.dragState.bubbleId);
+                if (step) {
+                    step.x = Math.round(newX * 10) / 10;
+                    step.size = Math.round(newSize * 10) / 10;
+
+                    if (this.currentEditId === this.dragState.bubbleId) {
+                        document.getElementById('edit-x').value = step.x;
+                        document.getElementById('edit-size').value = step.size;
+                    }
+
+                    window.TIMELINE_STEPS = this.timelineSteps;
+                    this.render();
+                }
+
+            } else if (this.dragState.dragType === 'label') {
+                // Label drag: X/Y = position
+                const newLineX = this.dragState.originalX + (deltaX * scaleX);
+                const newLineY = this.dragState.originalY + (deltaY * scaleY);
+
+                const step = this.timelineSteps.find(s => s.id === this.dragState.bubbleId);
+                if (step) {
+                    const taskArray = Array.isArray(step[this.dragState.taskType]) ? step[this.dragState.taskType] : [step[this.dragState.taskType]];
+                    const task = taskArray[this.dragState.taskIndex];
+                    if (task) {
+                        task.lineX = Math.round(newLineX * 10) / 10;
+                        task.lineY = Math.round(newLineY * 10) / 10;
+
+                        // Update editor panel
+                        const idx = this.dragState.taskIndex + 1;
+                        const prefix = this.dragState.taskType === 'preface' ? 'preface' : 'client';
+                        const lineXEl = document.getElementById(`edit-${prefix}-lineX-${idx}`);
+                        const lineYEl = document.getElementById(`edit-${prefix}-lineY-${idx}`);
+                        if (lineXEl) lineXEl.value = task.lineX;
+                        if (lineYEl) lineYEl.value = task.lineY;
+
+                        window.TIMELINE_STEPS = this.timelineSteps;
+                        this.render();
+                    }
+                }
+
+            } else if (this.dragState.dragType === 'indicator') {
+                // Indicator drag: X = anchor (-1 to 1)
+                // Every 50px = 1 anchor unit
+                const anchorChange = deltaX / 50;
+                let newAnchor = this.dragState.originalAnchor + anchorChange;
+                newAnchor = Math.max(-1, Math.min(1, newAnchor));
+                newAnchor = Math.round(newAnchor * 100) / 100;
+
+                const step = this.timelineSteps.find(s => s.id === this.dragState.bubbleId);
+                if (step) {
+                    const taskArray = Array.isArray(step[this.dragState.taskType]) ? step[this.dragState.taskType] : [step[this.dragState.taskType]];
+                    const task = taskArray[this.dragState.taskIndex];
+                    if (task) {
+                        task.anchor = newAnchor;
+
+                        // Update editor panel
+                        const idx = this.dragState.taskIndex + 1;
+                        const prefix = this.dragState.taskType === 'preface' ? 'preface' : 'client';
+                        const anchorEl = document.getElementById(`edit-${prefix}-anchor-${idx}`);
+                        if (anchorEl) anchorEl.value = task.anchor;
+
+                        window.TIMELINE_STEPS = this.timelineSteps;
+                        this.render();
+                    }
+                }
+            }
+        });
+
+        // Mouse up - end drag
+        document.addEventListener('mouseup', () => {
+            if (!this.dragState.isDragging) return;
+
+            // Save changes
+            window.TIMELINE_STEPS = this.timelineSteps;
+            this.populateBubbleSelector();
+
+            // Reset drag state
+            this.dragState = {
+                isDragging: false,
+                dragType: null,
+                bubbleId: null,
+                taskType: null,
+                taskIndex: null,
+                startX: 0,
+                startY: 0,
+                originalX: 0,
+                originalY: 0,
+                originalSize: 0,
+                originalAnchor: 0
+            };
+        });
+    }
+
     populateBubbleSelector() {
         const selector = document.getElementById('bubble-selector');
         if (!selector) return;
@@ -379,12 +613,14 @@ class ProcessTimeline {
                 const data = prefaceArray[i - 1];
                 document.getElementById(`edit-preface-label-${i}`).value = data.label || '';
                 document.getElementById(`edit-preface-size-${i}`).value = data.fontSize || 'M';
+                document.getElementById(`edit-preface-weight-${i}`).value = data.fontWeight || 'regular';
                 document.getElementById(`edit-preface-lineX-${i}`).value = data.lineX;
                 document.getElementById(`edit-preface-lineY-${i}`).value = data.lineY;
                 document.getElementById(`edit-preface-anchor-${i}`).value = data.anchor || 0;
             } else {
                 document.getElementById(`edit-preface-label-${i}`).value = '';
                 document.getElementById(`edit-preface-size-${i}`).value = 'M';
+                document.getElementById(`edit-preface-weight-${i}`).value = 'regular';
                 document.getElementById(`edit-preface-lineX-${i}`).value = step.x;
                 document.getElementById(`edit-preface-lineY-${i}`).value = -7 - (i - 1) * 1.5;
                 document.getElementById(`edit-preface-anchor-${i}`).value = 0;
@@ -409,12 +645,14 @@ class ProcessTimeline {
                 const data = clientArray[i - 1];
                 document.getElementById(`edit-client-label-${i}`).value = data.label || '';
                 document.getElementById(`edit-client-size-${i}`).value = data.fontSize || 'M';
+                document.getElementById(`edit-client-weight-${i}`).value = data.fontWeight || 'regular';
                 document.getElementById(`edit-client-lineX-${i}`).value = data.lineX;
                 document.getElementById(`edit-client-lineY-${i}`).value = data.lineY;
                 document.getElementById(`edit-client-anchor-${i}`).value = data.anchor || 0;
             } else {
                 document.getElementById(`edit-client-label-${i}`).value = '';
                 document.getElementById(`edit-client-size-${i}`).value = 'M';
+                document.getElementById(`edit-client-weight-${i}`).value = 'regular';
                 document.getElementById(`edit-client-lineX-${i}`).value = step.x;
                 document.getElementById(`edit-client-lineY-${i}`).value = 7 + (i - 1) * 1.5;
                 document.getElementById(`edit-client-anchor-${i}`).value = 0;
@@ -430,7 +668,7 @@ class ProcessTimeline {
 
         // Get values
         const phase = document.getElementById('edit-phase').value;
-        const size = parseInt(document.getElementById('edit-size').value);
+        const size = parseFloat(document.getElementById('edit-size').value);
         const x = parseFloat(document.getElementById('edit-x').value);
 
         // Build step object
@@ -449,6 +687,7 @@ class ProcessTimeline {
                 prefaceArray.push({
                     label: document.getElementById(`edit-preface-label-${i}`).value,
                     fontSize: document.getElementById(`edit-preface-size-${i}`).value,
+                    fontWeight: document.getElementById(`edit-preface-weight-${i}`).value,
                     lineX: parseFloat(document.getElementById(`edit-preface-lineX-${i}`).value),
                     lineY: parseFloat(document.getElementById(`edit-preface-lineY-${i}`).value),
                     anchor: parseFloat(document.getElementById(`edit-preface-anchor-${i}`).value)
@@ -464,6 +703,7 @@ class ProcessTimeline {
                 clientArray.push({
                     label: document.getElementById(`edit-client-label-${i}`).value,
                     fontSize: document.getElementById(`edit-client-size-${i}`).value,
+                    fontWeight: document.getElementById(`edit-client-weight-${i}`).value,
                     lineX: parseFloat(document.getElementById(`edit-client-lineX-${i}`).value),
                     lineY: parseFloat(document.getElementById(`edit-client-lineY-${i}`).value),
                     anchor: parseFloat(document.getElementById(`edit-client-anchor-${i}`).value)
@@ -486,8 +726,6 @@ class ProcessTimeline {
         window.TIMELINE_STEPS = this.timelineSteps;
         this.populateBubbleSelector();
         this.render();
-
-        alert('Bubble saved successfully!');
     }
 
     deleteBubble() {
@@ -574,13 +812,15 @@ class ProcessTimeline {
                         const task = prefaceArray[0];
                         const label = task.label.replace(/\n/g, '\\n');
                         const size = task.fontSize || 'M';
-                        output += `    preface: { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+                        const weight = task.fontWeight || 'regular';
+                        output += `    preface: { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
                     } else {
                         output += `    preface: [\n`;
                         prefaceArray.forEach((task, i) => {
                             const label = task.label.replace(/\n/g, '\\n');
                             const size = task.fontSize || 'M';
-                            output += `      { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+                            const weight = task.fontWeight || 'regular';
+                            output += `      { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
                             if (i < prefaceArray.length - 1) output += `,\n`;
                         });
                         output += `\n    ]`;
@@ -597,13 +837,15 @@ class ProcessTimeline {
                         const task = clientArray[0];
                         const label = task.label.replace(/\n/g, '\\n');
                         const size = task.fontSize || 'M';
-                        output += `    client: { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }\n`;
+                        const weight = task.fontWeight || 'regular';
+                        output += `    client: { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }\n`;
                     } else {
                         output += `    client: [\n`;
                         clientArray.forEach((task, i) => {
                             const label = task.label.replace(/\n/g, '\\n');
                             const size = task.fontSize || 'M';
-                            output += `      { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+                            const weight = task.fontWeight || 'regular';
+                            output += `      { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
                             if (i < clientArray.length - 1) output += `,\n`;
                         });
                         output += `\n    ]\n`;
@@ -897,19 +1139,19 @@ class ProcessTimeline {
         // Render Connections
         if (step.preface) {
             const prefaceArray = Array.isArray(step.preface) ? step.preface : [step.preface];
-            prefaceArray.forEach(task => {
-                this.renderConnection(svg, bx, by, task, radius, isVertical);
+            prefaceArray.forEach((task, index) => {
+                this.renderConnection(svg, bx, by, task, radius, isVertical, step.id, 'preface', index);
             });
         }
         if (step.client) {
             const clientArray = Array.isArray(step.client) ? step.client : [step.client];
-            clientArray.forEach(task => {
-                this.renderConnection(svg, bx, by, task, radius, isVertical);
+            clientArray.forEach((task, index) => {
+                this.renderConnection(svg, bx, by, task, radius, isVertical, step.id, 'client', index);
             });
         }
     }
 
-    renderConnection(svg, bx, by, task, radius, isVertical) {
+    renderConnection(svg, bx, by, task, radius, isVertical, stepId, owner, taskIndex) {
         const labelX = task.lineX;
         // Horizontal: task.lineY is offset. Vertical: task.lineY is absolute Y
         const labelY = isVertical ? task.lineY : (by + task.lineY);
@@ -995,8 +1237,12 @@ class ProcessTimeline {
         }
 
         // Map font size setting to numeric value
-        const sizeMap = { 'S': 0.2, 'M': 0.3, 'L': 0.4, 'XL': 0.5 };
+        const sizeMap = { 'M': 0.3, 'L': 0.4, 'XL': 0.5, 'XXL': 0.6, '3XL': 0.7, '4XL': 0.8 };
         const fontSize = sizeMap[task.fontSize] || sizeMap['M'];
+
+        // Map font weight setting
+        const weightMap = { 'light': 300, 'regular': 400, 'black': 900 };
+        const fontWeight = weightMap[task.fontWeight] || weightMap['regular'];
 
         const textLines = task.label.split('\n');
         const longestLine = textLines.reduce((max, line) => line.length > max.length ? line : max, '');
@@ -1057,12 +1303,22 @@ class ProcessTimeline {
         svg.appendChild(line);
 
         // Indicator Icon at start point (where line touches bubble)
-        this.renderIndicator(svg, startX, startY, this.settings.indicatorStyle, this.settings.indicatorColor);
+        const indicator = this.renderIndicator(svg, startX, startY, this.settings.indicatorStyle, this.settings.indicatorColor);
+        if (indicator) {
+            indicator.classList.add('draggable-indicator');
+            indicator.dataset.stepId = stepId;
+            indicator.dataset.taskType = owner;
+            indicator.dataset.taskIndex = taskIndex;
+        }
 
         // Label Text
         const label = this.createText(labelX, labelY, task.label, fontSize);
-        label.classList.add('label-text');
+        label.classList.add('label-text', 'draggable-label');
         label.setAttribute('fill', this.settings.textColor);
+        label.setAttribute('font-weight', fontWeight);
+        label.dataset.stepId = stepId;
+        label.dataset.taskType = owner;
+        label.dataset.taskIndex = taskIndex;
 
         // Vertically center the text block manually if multi-line
         if (textLines.length > 1) {
@@ -1071,10 +1327,11 @@ class ProcessTimeline {
             const firstTspan = label.querySelector('tspan');
             if (firstTspan) {
                 const totalHeight = (textLines.length - 1) * 1.2; // in em unit approx
-                // This is tricky with SVG units. 
+                // This is tricky with SVG units.
                 // Alternatively, we just offset the text element's Y
                 const yOffset = -(textLines.length - 1) * fontSize * 1.2 / 2;
-                label.setAttribute('transform', `translate(0, ${yOffset}) text-anchor="middle"`);
+                label.setAttribute('transform', `translate(0, ${yOffset})`);
+                label.setAttribute('text-anchor', 'middle');
             }
         } else {
             label.setAttribute('dominant-baseline', 'middle');
@@ -1085,31 +1342,32 @@ class ProcessTimeline {
     }
 
     renderIndicator(svg, x, y, style, color) {
-        if (style === 'none') return;
+        if (style === 'none') return null;
 
         const size = this.settings.indicatorSize;
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 
         switch (style) {
             case 'circle-dot':
                 const outer = this.createCircle(x, y, size, 'none');
                 outer.setAttribute('stroke', color);
                 outer.setAttribute('stroke-width', this.settings.indicatorStrokeWidth);
-                svg.appendChild(outer);
+                group.appendChild(outer);
 
                 const dot = this.createCircle(x, y, 0.1, color);
-                svg.appendChild(dot);
+                group.appendChild(dot);
                 break;
 
             case 'solid-circle':
                 const solid = this.createCircle(x, y, size, color);
-                svg.appendChild(solid);
+                group.appendChild(solid);
                 break;
 
             case 'hollow-circle':
                 const hollow = this.createCircle(x, y, size, 'none');
                 hollow.setAttribute('stroke', color);
                 hollow.setAttribute('stroke-width', this.settings.indicatorStrokeWidth);
-                svg.appendChild(hollow);
+                group.appendChild(hollow);
                 break;
 
             case 'square':
@@ -1119,7 +1377,7 @@ class ProcessTimeline {
                 square.setAttribute('width', size * 2);
                 square.setAttribute('height', size * 2);
                 square.setAttribute('fill', color);
-                svg.appendChild(square);
+                group.appendChild(square);
                 break;
 
             case 'diamond':
@@ -1127,20 +1385,21 @@ class ProcessTimeline {
                 const points = `${x},${y - size * 1.2} ${x + size * 1.2},${y} ${x},${y + size * 1.2} ${x - size * 1.2},${y}`;
                 diamond.setAttribute('points', points);
                 diamond.setAttribute('fill', color);
-                svg.appendChild(diamond);
+                group.appendChild(diamond);
                 break;
         }
+
+        svg.appendChild(group);
+        return group;
     }
 
     getBubbleSize(sizeLevel) {
-        const sizes = {
-            1: 2,
-            2: 3,
-            3: 4,
-            4: 5,
-            5: 6
-        };
-        return (sizes[sizeLevel] || 3) * 0.8; // Slightly smaller to fix crowding
+        // sizeLevel is now 1-100 continuous
+        // Map to SVG units: 1 = 1.0, 100 = 8.0 (linear interpolation)
+        const minSize = 1.0;
+        const maxSize = 8.0;
+        const size = minSize + ((sizeLevel - 1) / 99) * (maxSize - minSize);
+        return size;
     }
 
     createLine(x1, y1, x2, y2, strokeWidth = 0.05, dashArray = null) {

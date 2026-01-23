@@ -185,6 +185,11 @@ body {
   line-height: 1.2;
 }
 
+.draggable-label,
+.draggable-indicator {
+  cursor: pointer;
+}
+
 .owner-label {
   font-weight: bold;
   text-transform: uppercase;
