@@ -240,22 +240,26 @@ class ProcessTimeline {
             });
         }
 
-        // Preface checkbox
-        const hasPrefaceCheckbox = document.getElementById('edit-has-preface');
-        if (hasPrefaceCheckbox) {
-            hasPrefaceCheckbox.addEventListener('change', (e) => {
-                document.getElementById('preface-controls').style.display =
-                    e.target.checked ? 'block' : 'none';
-            });
+        // Preface checkboxes (1-3)
+        for (let i = 1; i <= 3; i++) {
+            const checkbox = document.getElementById(`edit-has-preface-${i}`);
+            if (checkbox) {
+                checkbox.addEventListener('change', (e) => {
+                    document.getElementById(`preface-controls-${i}`).style.display =
+                        e.target.checked ? 'block' : 'none';
+                });
+            }
         }
 
-        // Client checkbox
-        const hasClientCheckbox = document.getElementById('edit-has-client');
-        if (hasClientCheckbox) {
-            hasClientCheckbox.addEventListener('change', (e) => {
-                document.getElementById('client-controls').style.display =
-                    e.target.checked ? 'block' : 'none';
-            });
+        // Client checkboxes (1-3)
+        for (let i = 1; i <= 3; i++) {
+            const checkbox = document.getElementById(`edit-has-client-${i}`);
+            if (checkbox) {
+                checkbox.addEventListener('change', (e) => {
+                    document.getElementById(`client-controls-${i}`).style.display =
+                        e.target.checked ? 'block' : 'none';
+                });
+            }
         }
 
         // Save button
@@ -335,40 +339,64 @@ class ProcessTimeline {
         document.getElementById('edit-size').value = step.size;
         document.getElementById('edit-x').value = step.x;
 
-        // Preface
-        const hasPreface = !!step.preface;
-        document.getElementById('edit-has-preface').checked = hasPreface;
-        document.getElementById('preface-controls').style.display = hasPreface ? 'block' : 'none';
+        // Normalize preface to array (backward compatibility)
+        const prefaceArray = step.preface
+            ? (Array.isArray(step.preface) ? step.preface : [step.preface])
+            : [];
 
-        if (hasPreface) {
-            document.getElementById('edit-preface-label').value = step.preface.label;
-            document.getElementById('edit-preface-size').value = step.preface.fontSize || 'M';
-            document.getElementById('edit-preface-lineX').value = step.preface.lineX;
-            document.getElementById('edit-preface-lineY').value = step.preface.lineY;
-            document.getElementById('edit-preface-anchor').value = step.preface.anchor || 0;
-        } else {
-            document.getElementById('edit-preface-label').value = '';
-            document.getElementById('edit-preface-lineX').value = step.x;
-            document.getElementById('edit-preface-lineY').value = -7;
-            document.getElementById('edit-preface-anchor').value = 0;
+        // Populate up to 3 preface descriptions
+        for (let i = 1; i <= 3; i++) {
+            const hasData = i <= prefaceArray.length;
+            const checkbox = document.getElementById(`edit-has-preface-${i}`);
+            const controls = document.getElementById(`preface-controls-${i}`);
+
+            checkbox.checked = hasData;
+            controls.style.display = hasData ? 'block' : 'none';
+
+            if (hasData) {
+                const data = prefaceArray[i - 1];
+                document.getElementById(`edit-preface-label-${i}`).value = data.label || '';
+                document.getElementById(`edit-preface-size-${i}`).value = data.fontSize || 'M';
+                document.getElementById(`edit-preface-lineX-${i}`).value = data.lineX;
+                document.getElementById(`edit-preface-lineY-${i}`).value = data.lineY;
+                document.getElementById(`edit-preface-anchor-${i}`).value = data.anchor || 0;
+            } else {
+                document.getElementById(`edit-preface-label-${i}`).value = '';
+                document.getElementById(`edit-preface-size-${i}`).value = 'M';
+                document.getElementById(`edit-preface-lineX-${i}`).value = step.x;
+                document.getElementById(`edit-preface-lineY-${i}`).value = -7 - (i - 1) * 1.5;
+                document.getElementById(`edit-preface-anchor-${i}`).value = 0;
+            }
         }
 
-        // Client
-        const hasClient = !!step.client;
-        document.getElementById('edit-has-client').checked = hasClient;
-        document.getElementById('client-controls').style.display = hasClient ? 'block' : 'none';
+        // Normalize client to array (backward compatibility)
+        const clientArray = step.client
+            ? (Array.isArray(step.client) ? step.client : [step.client])
+            : [];
 
-        if (hasClient) {
-            document.getElementById('edit-client-label').value = step.client.label;
-            document.getElementById('edit-client-size').value = step.client.fontSize || 'M';
-            document.getElementById('edit-client-lineX').value = step.client.lineX;
-            document.getElementById('edit-client-lineY').value = step.client.lineY;
-            document.getElementById('edit-client-anchor').value = step.client.anchor || 0;
-        } else {
-            document.getElementById('edit-client-label').value = '';
-            document.getElementById('edit-client-lineX').value = step.x;
-            document.getElementById('edit-client-lineY').value = 7;
-            document.getElementById('edit-client-anchor').value = 0;
+        // Populate up to 3 client descriptions
+        for (let i = 1; i <= 3; i++) {
+            const hasData = i <= clientArray.length;
+            const checkbox = document.getElementById(`edit-has-client-${i}`);
+            const controls = document.getElementById(`client-controls-${i}`);
+
+            checkbox.checked = hasData;
+            controls.style.display = hasData ? 'block' : 'none';
+
+            if (hasData) {
+                const data = clientArray[i - 1];
+                document.getElementById(`edit-client-label-${i}`).value = data.label || '';
+                document.getElementById(`edit-client-size-${i}`).value = data.fontSize || 'M';
+                document.getElementById(`edit-client-lineX-${i}`).value = data.lineX;
+                document.getElementById(`edit-client-lineY-${i}`).value = data.lineY;
+                document.getElementById(`edit-client-anchor-${i}`).value = data.anchor || 0;
+            } else {
+                document.getElementById(`edit-client-label-${i}`).value = '';
+                document.getElementById(`edit-client-size-${i}`).value = 'M';
+                document.getElementById(`edit-client-lineX-${i}`).value = step.x;
+                document.getElementById(`edit-client-lineY-${i}`).value = 7 + (i - 1) * 1.5;
+                document.getElementById(`edit-client-anchor-${i}`).value = 0;
+            }
         }
     }
 
@@ -383,9 +411,6 @@ class ProcessTimeline {
         const size = parseInt(document.getElementById('edit-size').value);
         const x = parseFloat(document.getElementById('edit-x').value);
 
-        const hasPreface = document.getElementById('edit-has-preface').checked;
-        const hasClient = document.getElementById('edit-has-client').checked;
-
         // Build step object
         const step = {
             id: this.currentEditId,
@@ -394,24 +419,42 @@ class ProcessTimeline {
             size: size
         };
 
-        if (hasPreface) {
-            step.preface = {
-                label: document.getElementById('edit-preface-label').value,
-                fontSize: document.getElementById('edit-preface-size').value,
-                lineX: parseFloat(document.getElementById('edit-preface-lineX').value),
-                lineY: parseFloat(document.getElementById('edit-preface-lineY').value),
-                anchor: parseFloat(document.getElementById('edit-preface-anchor').value)
-            };
+        // Collect preface descriptions
+        const prefaceArray = [];
+        for (let i = 1; i <= 3; i++) {
+            const isChecked = document.getElementById(`edit-has-preface-${i}`).checked;
+            if (isChecked) {
+                prefaceArray.push({
+                    label: document.getElementById(`edit-preface-label-${i}`).value,
+                    fontSize: document.getElementById(`edit-preface-size-${i}`).value,
+                    lineX: parseFloat(document.getElementById(`edit-preface-lineX-${i}`).value),
+                    lineY: parseFloat(document.getElementById(`edit-preface-lineY-${i}`).value),
+                    anchor: parseFloat(document.getElementById(`edit-preface-anchor-${i}`).value)
+                });
+            }
         }
 
-        if (hasClient) {
-            step.client = {
-                label: document.getElementById('edit-client-label').value,
-                fontSize: document.getElementById('edit-client-size').value,
-                lineX: parseFloat(document.getElementById('edit-client-lineX').value),
-                lineY: parseFloat(document.getElementById('edit-client-lineY').value),
-                anchor: parseFloat(document.getElementById('edit-client-anchor').value)
-            };
+        // Collect client descriptions
+        const clientArray = [];
+        for (let i = 1; i <= 3; i++) {
+            const isChecked = document.getElementById(`edit-has-client-${i}`).checked;
+            if (isChecked) {
+                clientArray.push({
+                    label: document.getElementById(`edit-client-label-${i}`).value,
+                    fontSize: document.getElementById(`edit-client-size-${i}`).value,
+                    lineX: parseFloat(document.getElementById(`edit-client-lineX-${i}`).value),
+                    lineY: parseFloat(document.getElementById(`edit-client-lineY-${i}`).value),
+                    anchor: parseFloat(document.getElementById(`edit-client-anchor-${i}`).value)
+                });
+            }
+        }
+
+        // Add arrays to step if they have items
+        if (prefaceArray.length > 0) {
+            step.preface = prefaceArray.length === 1 ? prefaceArray[0] : prefaceArray;
+        }
+        if (clientArray.length > 0) {
+            step.client = clientArray.length === 1 ? clientArray[0] : clientArray;
         }
 
         // Update
@@ -503,17 +546,46 @@ class ProcessTimeline {
                 output += `,\n`;
 
                 if (step.preface) {
-                    const label = step.preface.label.replace(/\n/g, '\\n');
-                    const size = step.preface.fontSize || 'M';
-                    output += `    preface: { label: '${label}', fontSize: '${size}', lineX: ${step.preface.lineX}, lineY: ${step.preface.lineY}, anchor: ${step.preface.anchor} }`;
+                    const prefaceArray = Array.isArray(step.preface) ? step.preface : [step.preface];
+
+                    if (prefaceArray.length === 1) {
+                        const task = prefaceArray[0];
+                        const label = task.label.replace(/\n/g, '\\n');
+                        const size = task.fontSize || 'M';
+                        output += `    preface: { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+                    } else {
+                        output += `    preface: [\n`;
+                        prefaceArray.forEach((task, i) => {
+                            const label = task.label.replace(/\n/g, '\\n');
+                            const size = task.fontSize || 'M';
+                            output += `      { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+                            if (i < prefaceArray.length - 1) output += `,\n`;
+                        });
+                        output += `\n    ]`;
+                    }
+
                     if (step.client) output += `,\n`;
                     else output += `\n`;
                 }
 
                 if (step.client) {
-                    const label = step.client.label.replace(/\n/g, '\\n');
-                    const size = step.client.fontSize || 'M';
-                    output += `    client: { label: '${label}', fontSize: '${size}', lineX: ${step.client.lineX}, lineY: ${step.client.lineY}, anchor: ${step.client.anchor} }\n`;
+                    const clientArray = Array.isArray(step.client) ? step.client : [step.client];
+
+                    if (clientArray.length === 1) {
+                        const task = clientArray[0];
+                        const label = task.label.replace(/\n/g, '\\n');
+                        const size = task.fontSize || 'M';
+                        output += `    client: { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }\n`;
+                    } else {
+                        output += `    client: [\n`;
+                        clientArray.forEach((task, i) => {
+                            const label = task.label.replace(/\n/g, '\\n');
+                            const size = task.fontSize || 'M';
+                            output += `      { label: '${label}', fontSize: '${size}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+                            if (i < clientArray.length - 1) output += `,\n`;
+                        });
+                        output += `\n    ]\n`;
+                    }
                 }
             } else {
                 output += `\n`;
@@ -723,21 +795,32 @@ class ProcessTimeline {
                 // y is ignored as all bubbles are on center (0), so x position is centerX
 
                 // Transform Tasks
-                const prefaceTask = step.preface ? {
-                    ...step.preface,
-                    // Original: lineX (horizontal pos), lineY (offset from center)
-                    // Vertical: lineX -> lineY (vertical pos), lineY -> lineX (offset from center)
-                    // NEGATIVE lineY in horizontal (up/preface) means LEFT in vertical.
-                    lineX: centerX - Math.abs(step.preface.lineY),
-                    lineY: step.preface.lineX
-                } : null;
+                // Transform Tasks
+                let prefaceTask = null;
+                if (step.preface) {
+                    const prefaceArray = Array.isArray(step.preface) ? step.preface : [step.preface];
+                    prefaceTask = prefaceArray.map(task => ({
+                        ...task,
+                        // Original: lineX (horizontal pos), lineY (offset from center)
+                        // Vertical: lineX -> lineY (vertical pos), lineY -> lineX (offset from center)
+                        // NEGATIVE lineY in horizontal (up/preface) means LEFT in vertical.
+                        lineX: centerX - Math.abs(task.lineY),
+                        lineY: task.lineX
+                    }));
+                    // Keep as object if it was single, to match structure expected by renderStep (which we will also update, but consistency helps)
+                    // Actually, let's just pass arrays to renderStep always, it will be easier.
+                }
 
-                const clientTask = step.client ? {
-                    ...step.client,
-                    // POSITIVE lineY in horizontal (down/client) means RIGHT in vertical
-                    lineX: centerX + Math.abs(step.client.lineY),
-                    lineY: step.client.lineX
-                } : null;
+                let clientTask = null;
+                if (step.client) {
+                    const clientArray = Array.isArray(step.client) ? step.client : [step.client];
+                    clientTask = clientArray.map(task => ({
+                        ...task,
+                        // POSITIVE lineY in horizontal (down/client) means RIGHT in vertical
+                        lineX: centerX + Math.abs(task.lineY),
+                        lineY: task.lineX
+                    }));
+                }
 
                 const verticalStep = {
                     ...step,
@@ -773,10 +856,16 @@ class ProcessTimeline {
 
         // Render Connections
         if (step.preface) {
-            this.renderConnection(svg, bx, by, step.preface, radius, isVertical);
+            const prefaceArray = Array.isArray(step.preface) ? step.preface : [step.preface];
+            prefaceArray.forEach(task => {
+                this.renderConnection(svg, bx, by, task, radius, isVertical);
+            });
         }
         if (step.client) {
-            this.renderConnection(svg, bx, by, step.client, radius, isVertical);
+            const clientArray = Array.isArray(step.client) ? step.client : [step.client];
+            clientArray.forEach(task => {
+                this.renderConnection(svg, bx, by, task, radius, isVertical);
+            });
         }
     }
 
