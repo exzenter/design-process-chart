@@ -26,7 +26,13 @@
   /* Effects */
   --bubble-opacity: 0.7;
   --blend-mode: multiply;
+  --bubble-opacity: 0.7;
+  --blend-mode: multiply;
   --bubble-hover-scale: 1.05;
+  --connection-hover-color: #e63946;
+  --connection-hover-width: 0.1;
+  --indicator-hover-stroke: 0.1;
+  --connection-hover-text-scale: 1.0;
 
   /* Spacing */
   --legend-gap: 1rem;
@@ -155,7 +161,6 @@ body {
 
 /* SVG Styles */
 .timeline-line {
-  stroke: #333;
   fill: none;
 }
 
@@ -173,16 +178,33 @@ body {
   transform: scale(var(--bubble-hover-scale));
 }
 
+.bubble-highlighted {
+  opacity: 1;
+  transform: scale(var(--bubble-hover-scale));
+}
+
 .connection-line {
-  stroke: #999;
   fill: none;
+  transition: stroke 0.3s, stroke-width 0.3s;
+}
+
+.connection-line.highlighted {
+  stroke: var(--connection-hover-color) !important;
+  stroke-width: var(--connection-hover-width) !important;
 }
 
 .label-text {
-  fill: #333;
   text-anchor: middle;
   white-space: pre;
   line-height: 1.2;
+  transition: fill 0.3s, transform 0.3s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.label-text.highlighted {
+  fill: var(--connection-hover-color) !important;
+  transform: scale(var(--connection-hover-text-scale));
 }
 
 .draggable-label,
@@ -194,6 +216,15 @@ body {
   font-weight: bold;
   text-transform: uppercase;
   fill: #333;
+}
+
+/* Highlighted state for indicators */
+.draggable-indicator.highlighted circle,
+.draggable-indicator.highlighted rect,
+.draggable-indicator.highlighted polygon {
+  stroke: var(--connection-hover-color) !important;
+  fill: var(--connection-hover-color) !important;
+  stroke-width: var(--indicator-hover-stroke) !important;
 }
 
 /* Legend Box */

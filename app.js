@@ -27,7 +27,13 @@ class ProcessTimeline {
             indicatorSize: 0.4,
             indicatorColor: '#999999',
             indicatorStrokeWidth: 0.05,
-            timelinePadding: 0
+            timelinePadding: 0,
+            timelinePadding: 0,
+            bubbleBlendMode: 'multiply',
+            connectionHoverColor: '#e63946',
+            connectionHoverWidth: 0.1,
+            indicatorHoverStroke: 0.1,
+            connectionHoverTextScale: 1.0
         };
         // Keep a working copy of timeline steps for editing
         this.timelineSteps = JSON.parse(JSON.stringify(window.TIMELINE_STEPS || []));
@@ -241,6 +247,54 @@ class ProcessTimeline {
                 this.settings.timelinePadding = parseFloat(e.target.value);
                 e.target.nextElementSibling.textContent = e.target.value + '%';
                 this.render();
+            });
+        }
+
+        // Bubble blend mode
+        const bubbleBlendMode = document.getElementById('bubble-blend-mode');
+        if (bubbleBlendMode) {
+            bubbleBlendMode.addEventListener('change', (e) => {
+                this.settings.bubbleBlendMode = e.target.value;
+                this.render();
+            });
+        }
+
+        // Connection hover color
+        const connectionHoverColor = document.getElementById('connection-hover-color');
+        if (connectionHoverColor) {
+            connectionHoverColor.addEventListener('input', (e) => {
+                this.settings.connectionHoverColor = e.target.value;
+                this.updateStyles();
+            });
+        }
+
+        // Connection hover width
+        const connectionHoverWidth = document.getElementById('connection-hover-width');
+        if (connectionHoverWidth) {
+            connectionHoverWidth.addEventListener('input', (e) => {
+                this.settings.connectionHoverWidth = parseFloat(e.target.value);
+                e.target.nextElementSibling.textContent = e.target.value;
+                this.updateStyles();
+            });
+        }
+
+        // Indicator hover stroke
+        const indicatorHoverStroke = document.getElementById('indicator-hover-stroke');
+        if (indicatorHoverStroke) {
+            indicatorHoverStroke.addEventListener('input', (e) => {
+                this.settings.indicatorHoverStroke = parseFloat(e.target.value);
+                e.target.nextElementSibling.textContent = e.target.value;
+                this.updateStyles();
+            });
+        }
+
+        // Connection hover text scale
+        const connectionHoverTextScale = document.getElementById('connection-hover-text-scale');
+        if (connectionHoverTextScale) {
+            connectionHoverTextScale.addEventListener('input', (e) => {
+                this.settings.connectionHoverTextScale = parseFloat(e.target.value);
+                e.target.nextElementSibling.textContent = e.target.value;
+                this.updateStyles();
             });
         }
 
@@ -894,6 +948,12 @@ class ProcessTimeline {
         // Update bubble hover scale
         root.style.setProperty('--bubble-hover-scale', this.settings.bubbleHoverScale);
 
+        // Update connection hover styles
+        root.style.setProperty('--connection-hover-color', this.settings.connectionHoverColor);
+        root.style.setProperty('--connection-hover-width', this.settings.connectionHoverWidth);
+        root.style.setProperty('--indicator-hover-stroke', this.settings.indicatorHoverStroke);
+        root.style.setProperty('--connection-hover-text-scale', this.settings.connectionHoverTextScale);
+
         // Update body font
         document.body.style.fontFamily = this.settings.fontFamily;
 
@@ -926,7 +986,12 @@ class ProcessTimeline {
             indicatorSize: 0.4,
             indicatorColor: '#999999',
             indicatorStrokeWidth: 0.05,
-            timelinePadding: 0
+            timelinePadding: 0,
+            bubbleBlendMode: 'multiply',
+            connectionHoverColor: '#e63946',
+            connectionHoverWidth: 0.1,
+            indicatorHoverStroke: 0.1,
+            connectionHoverTextScale: 1.0
         };
 
         // Update inputs
@@ -956,6 +1021,28 @@ class ProcessTimeline {
         document.getElementById('indicator-stroke-width').nextElementSibling.textContent = this.settings.indicatorStrokeWidth;
         document.getElementById('timeline-padding').value = this.settings.timelinePadding;
         document.getElementById('timeline-padding').nextElementSibling.textContent = this.settings.timelinePadding + '%';
+        if (document.getElementById('bubble-blend-mode')) {
+            document.getElementById('bubble-blend-mode').value = this.settings.bubbleBlendMode;
+        }
+
+        if (document.getElementById('connection-hover-color')) {
+            document.getElementById('connection-hover-color').value = this.settings.connectionHoverColor;
+        }
+
+        if (document.getElementById('connection-hover-width')) {
+            document.getElementById('connection-hover-width').value = this.settings.connectionHoverWidth;
+            document.getElementById('connection-hover-width').nextElementSibling.textContent = this.settings.connectionHoverWidth;
+        }
+
+        if (document.getElementById('indicator-hover-stroke')) {
+            document.getElementById('indicator-hover-stroke').value = this.settings.indicatorHoverStroke;
+            document.getElementById('indicator-hover-stroke').nextElementSibling.textContent = this.settings.indicatorHoverStroke;
+        }
+
+        if (document.getElementById('connection-hover-text-scale')) {
+            document.getElementById('connection-hover-text-scale').value = this.settings.connectionHoverTextScale;
+            document.getElementById('connection-hover-text-scale').nextElementSibling.textContent = this.settings.connectionHoverTextScale;
+        }
 
         // Apply settings
         this.updateStyles();
@@ -1028,7 +1115,10 @@ class ProcessTimeline {
 
         // Render all steps
         if (window.TIMELINE_STEPS) {
-            window.TIMELINE_STEPS.forEach(step => {
+            // Sort steps by size (descending) so smaller bubbles are rendered on top
+            const sortedSteps = [...window.TIMELINE_STEPS].sort((a, b) => b.size - a.size);
+
+            sortedSteps.forEach(step => {
                 this.renderStep(svg, step, centerY, false);
             });
         }
@@ -1071,7 +1161,10 @@ class ProcessTimeline {
 
         // Render all steps
         if (window.TIMELINE_STEPS) {
-            window.TIMELINE_STEPS.forEach(step => {
+            // Sort steps by size (descending) so smaller bubbles are rendered on top
+            const sortedSteps = [...window.TIMELINE_STEPS].sort((a, b) => b.size - a.size);
+
+            sortedSteps.forEach(step => {
                 // Transform step coordinates for vertical view
                 // x becomes y (down the timeline)
                 // y is ignored as all bubbles are on center (0), so x position is centerX
@@ -1124,7 +1217,6 @@ class ProcessTimeline {
         const bubbleColor = this.settings.colors[step.phase] || phase.color;
         const bubbleSize = this.getBubbleSize(step.size);
         const radius = bubbleSize / 2;
-
         // Bubble Position
         const bx = step.x;
         const by = isVertical ? step.y : centerLine; // Horizontal: y is centerLine (offset 0)
@@ -1134,6 +1226,38 @@ class ProcessTimeline {
         circle.classList.add('bubble');
         circle.dataset.id = step.id;
         circle.dataset.phase = step.phase;
+        circle.style.mixBlendMode = this.settings.bubbleBlendMode;
+
+        // Add hover listeners
+        const handleHoverEnter = () => {
+            const lines = svg.querySelectorAll(`.connection-line[data-step-id="${step.id}"]`);
+            const labels = svg.querySelectorAll(`.label-text[data-step-id="${step.id}"]`);
+            const indicators = svg.querySelectorAll(`.draggable-indicator[data-step-id="${step.id}"]`);
+
+            // Highlight current bubble
+            circle.classList.add('bubble-highlighted');
+
+            lines.forEach(line => line.classList.add('highlighted'));
+            labels.forEach(label => label.classList.add('highlighted'));
+            indicators.forEach(indicator => indicator.classList.add('highlighted'));
+        };
+
+        const handleHoverLeave = () => {
+            const lines = svg.querySelectorAll(`.connection-line[data-step-id="${step.id}"]`);
+            const labels = svg.querySelectorAll(`.label-text[data-step-id="${step.id}"]`);
+            const indicators = svg.querySelectorAll(`.draggable-indicator[data-step-id="${step.id}"]`);
+
+            // Un-Highlight current bubble
+            circle.classList.remove('bubble-highlighted');
+
+            lines.forEach(line => line.classList.remove('highlighted'));
+            labels.forEach(label => label.classList.remove('highlighted'));
+            indicators.forEach(indicator => indicator.classList.remove('highlighted'));
+        };
+
+        circle.addEventListener('mouseenter', handleHoverEnter);
+        circle.addEventListener('mouseleave', handleHoverLeave);
+
         svg.appendChild(circle);
 
         // Render Connections
@@ -1300,6 +1424,7 @@ class ProcessTimeline {
         );
         line.classList.add('connection-line');
         line.setAttribute('stroke', this.settings.connectionColor);
+        line.dataset.stepId = stepId;
         svg.appendChild(line);
 
         // Indicator Icon at start point (where line touches bubble)
@@ -1309,6 +1434,17 @@ class ProcessTimeline {
             indicator.dataset.stepId = stepId;
             indicator.dataset.taskType = owner;
             indicator.dataset.taskIndex = taskIndex;
+
+            // Add reverse hover logic to indicators
+            indicator.addEventListener('mouseenter', () => {
+                const bubble = svg.querySelector(`.bubble[data-id="${stepId}"]`);
+                if (bubble) bubble.dispatchEvent(new Event('mouseenter'));
+            });
+
+            indicator.addEventListener('mouseleave', () => {
+                const bubble = svg.querySelector(`.bubble[data-id="${stepId}"]`);
+                if (bubble) bubble.dispatchEvent(new Event('mouseleave'));
+            });
         }
 
         // Label Text
@@ -1319,6 +1455,18 @@ class ProcessTimeline {
         label.dataset.stepId = stepId;
         label.dataset.taskType = owner;
         label.dataset.taskIndex = taskIndex;
+
+        // Add reverse hover logic to text labels
+        // Find the step object to access properties, or we can just find the bubble element by ID
+        label.addEventListener('mouseenter', () => {
+            const bubble = svg.querySelector(`.bubble[data-id="${stepId}"]`);
+            if (bubble) bubble.dispatchEvent(new Event('mouseenter'));
+        });
+
+        label.addEventListener('mouseleave', () => {
+            const bubble = svg.querySelector(`.bubble[data-id="${stepId}"]`);
+            if (bubble) bubble.dispatchEvent(new Event('mouseleave'));
+        });
 
         // Vertically center the text block manually if multi-line
         if (textLines.length > 1) {
