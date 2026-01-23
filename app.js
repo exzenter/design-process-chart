@@ -25,7 +25,9 @@ class ProcessTimeline {
             bubbleHoverScale: 1.05,
             indicatorStyle: 'circle-dot',
             indicatorSize: 0.4,
-            indicatorColor: '#999999'
+            indicatorColor: '#999999',
+            indicatorStrokeWidth: 0.05,
+            timelinePadding: 0
         };
         // Keep a working copy of timeline steps for editing
         this.timelineSteps = JSON.parse(JSON.stringify(window.TIMELINE_STEPS || []));
@@ -201,6 +203,26 @@ class ProcessTimeline {
         if (indicatorColor) {
             indicatorColor.addEventListener('input', (e) => {
                 this.settings.indicatorColor = e.target.value;
+                this.render();
+            });
+        }
+
+        // Indicator stroke width
+        const indicatorStrokeWidth = document.getElementById('indicator-stroke-width');
+        if (indicatorStrokeWidth) {
+            indicatorStrokeWidth.addEventListener('input', (e) => {
+                this.settings.indicatorStrokeWidth = parseFloat(e.target.value);
+                e.target.nextElementSibling.textContent = e.target.value;
+                this.render();
+            });
+        }
+
+        // Timeline padding
+        const timelinePadding = document.getElementById('timeline-padding');
+        if (timelinePadding) {
+            timelinePadding.addEventListener('input', (e) => {
+                this.settings.timelinePadding = parseFloat(e.target.value);
+                e.target.nextElementSibling.textContent = e.target.value + '%';
                 this.render();
             });
         }
@@ -660,7 +682,9 @@ class ProcessTimeline {
             bubbleHoverScale: 1.05,
             indicatorStyle: 'circle-dot',
             indicatorSize: 0.4,
-            indicatorColor: '#999999'
+            indicatorColor: '#999999',
+            indicatorStrokeWidth: 0.05,
+            timelinePadding: 0
         };
 
         // Update inputs
@@ -686,6 +710,10 @@ class ProcessTimeline {
         document.getElementById('indicator-size').value = this.settings.indicatorSize;
         document.getElementById('indicator-size').nextElementSibling.textContent = this.settings.indicatorSize;
         document.getElementById('indicator-color').value = this.settings.indicatorColor;
+        document.getElementById('indicator-stroke-width').value = this.settings.indicatorStrokeWidth;
+        document.getElementById('indicator-stroke-width').nextElementSibling.textContent = this.settings.indicatorStrokeWidth;
+        document.getElementById('timeline-padding').value = this.settings.timelinePadding;
+        document.getElementById('timeline-padding').nextElementSibling.textContent = this.settings.timelinePadding + '%';
 
         // Apply settings
         this.updateStyles();
@@ -728,13 +756,19 @@ class ProcessTimeline {
         const width = 50;
         const height = 20;
 
+        // Calculate padding offset
+        const paddingPercent = this.settings.timelinePadding / 100;
+        const paddingX = width * paddingPercent;
+        const lineStartX = paddingX;
+        const lineEndX = width - paddingX;
+
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
         svg.classList.add('timeline-svg');
 
-        // Center line
+        // Center line (with padding)
         const centerY = height / 2;
-        const timelineLine = this.createLine(0, centerY, width, centerY, this.settings.timelineWidth);
+        const timelineLine = this.createLine(lineStartX, centerY, lineEndX, centerY, this.settings.timelineWidth);
         timelineLine.classList.add('timeline-line');
         timelineLine.setAttribute('stroke', this.settings.timelineColor);
         svg.appendChild(timelineLine);
@@ -764,13 +798,19 @@ class ProcessTimeline {
         const width = 20;
         const height = 50;
 
+        // Calculate padding offset
+        const paddingPercent = this.settings.timelinePadding / 100;
+        const paddingY = height * paddingPercent;
+        const lineStartY = paddingY;
+        const lineEndY = height - paddingY;
+
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
         svg.classList.add('timeline-svg');
 
-        // Center line
+        // Center line (with padding)
         const centerX = width / 2;
-        const timelineLine = this.createLine(centerX, 0, centerX, height, this.settings.timelineWidth);
+        const timelineLine = this.createLine(centerX, lineStartY, centerX, lineEndY, this.settings.timelineWidth);
         timelineLine.classList.add('timeline-line');
         timelineLine.setAttribute('stroke', this.settings.timelineColor);
         svg.appendChild(timelineLine);
@@ -1053,7 +1093,7 @@ class ProcessTimeline {
             case 'circle-dot':
                 const outer = this.createCircle(x, y, size, 'none');
                 outer.setAttribute('stroke', color);
-                outer.setAttribute('stroke-width', 0.05);
+                outer.setAttribute('stroke-width', this.settings.indicatorStrokeWidth);
                 svg.appendChild(outer);
 
                 const dot = this.createCircle(x, y, 0.1, color);
@@ -1068,7 +1108,7 @@ class ProcessTimeline {
             case 'hollow-circle':
                 const hollow = this.createCircle(x, y, size, 'none');
                 hollow.setAttribute('stroke', color);
-                hollow.setAttribute('stroke-width', 0.08);
+                hollow.setAttribute('stroke-width', this.settings.indicatorStrokeWidth);
                 svg.appendChild(hollow);
                 break;
 
