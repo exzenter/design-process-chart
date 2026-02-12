@@ -1,743 +1,950 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Website Process - Preface Studios</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Website Process - Preface Studios</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="view-toggle">
+          <button id="view-horizontal" class="active">Horizontal</button>
+          <button id="view-vertical">Vertical</button>
+        </div>
 
-<body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="view-toggle">
-        <button id="view-horizontal" class="active">Horizontal</button>
-        <button id="view-vertical">Vertical</button>
+        <button id="settings-toggle" class="settings-btn">⚙️ Settings</button>
+        <button id="editor-toggle" class="editor-btn">✏️ Edit Bubbles</button>
+      </header>
+
+      <!-- Version Bar -->
+      <div class="version-bar">
+        <div class="version-bar-left">
+          <span class="version-label">Versions:</span>
+          <div id="version-buttons" class="version-buttons"></div>
+        </div>
+        <div class="version-bar-right">
+          <input
+            type="text"
+            id="version-name-input"
+            class="version-name-input"
+            placeholder="Version name..." />
+          <button id="save-version-btn" class="version-action-btn save">
+            💾 Save
+          </button>
+          <button id="delete-version-btn" class="version-action-btn delete">
+            🗑️ Delete
+          </button>
+          <button id="import-version-btn" class="version-action-btn import">
+            📥 Import
+          </button>
+          <button id="export-version-btn" class="version-action-btn export">
+            📤 Export
+          </button>
+          <input
+            type="file"
+            id="import-version-file"
+            accept=".json"
+            style="display: none" />
+        </div>
       </div>
 
-      <button id="settings-toggle" class="settings-btn">⚙️ Settings</button>
-      <button id="editor-toggle" class="editor-btn">✏️ Edit Bubbles</button>
-    </header>
+      <!-- Timeline -->
+      <div class="timeline-wrapper horizontal">
+        <div id="timeline-svg"></div>
+      </div>
 
-    <!-- Timeline -->
-    <div class="timeline-wrapper horizontal">
-      <div id="timeline-svg"></div>
-    </div>
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-content">
+          <!-- Phases -->
+          <div class="legend-section">
+            <h3>Phase</h3>
+            <div class="phase-list">
+              <div class="phase-item" data-phase="contact">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-contact)"></div>
+                <span class="phase-name">Contact</span>
+              </div>
+              <div class="phase-item" data-phase="discovery">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-discovery)"></div>
+                <span class="phase-name">Discovery</span>
+              </div>
+              <div class="phase-item" data-phase="content">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-content)"></div>
+                <span class="phase-name">Content</span>
+              </div>
+              <div class="phase-item" data-phase="uxue">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-uxue)"></div>
+                <span class="phase-name">UX/UE</span>
+              </div>
+              <div class="phase-item" data-phase="coding">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-coding)"></div>
+                <span class="phase-name">Coding</span>
+              </div>
+              <div class="phase-item" data-phase="launch">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-launch)"></div>
+                <span class="phase-name">Launch</span>
+              </div>
+              <div class="phase-item" data-phase="support">
+                <div
+                  class="phase-color"
+                  style="background-color: var(--color-support)"></div>
+                <span class="phase-name">Support</span>
+              </div>
+            </div>
+          </div>
 
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-content">
-        <!-- Phases -->
-        <div class="legend-section">
-          <h3>Phase</h3>
-          <div class="phase-list">
-            <div class="phase-item" data-phase="contact">
-              <div class="phase-color" style="background-color: var(--color-contact);"></div>
-              <span class="phase-name">Contact</span>
+          <!-- Involvement -->
+          <div class="legend-section">
+            <h3>Involvement</h3>
+            <div class="importance-list">
+              <div class="importance-item">
+                <div class="importance-visual">
+                  <div class="importance-circle active"></div>
+                </div>
+                <div class="importance-label">Less</div>
+              </div>
+              <div class="importance-item">
+                <div class="importance-visual">
+                  <div class="importance-circle active"></div>
+                  <div class="importance-circle active"></div>
+                </div>
+                <div class="importance-label">Average</div>
+              </div>
+              <div class="importance-item">
+                <div class="importance-visual">
+                  <div class="importance-circle active"></div>
+                  <div class="importance-circle active"></div>
+                  <div class="importance-circle active"></div>
+                </div>
+                <div class="importance-label">
+                  <span class="importance-value">Greater</span>
+                </div>
+              </div>
             </div>
-            <div class="phase-item" data-phase="discovery">
-              <div class="phase-color" style="background-color: var(--color-discovery);"></div>
-              <span class="phase-name">Discovery</span>
-            </div>
-            <div class="phase-item" data-phase="content">
-              <div class="phase-color" style="background-color: var(--color-content);"></div>
-              <span class="phase-name">Content</span>
-            </div>
-            <div class="phase-item" data-phase="uxue">
-              <div class="phase-color" style="background-color: var(--color-uxue);"></div>
-              <span class="phase-name">UX/UE</span>
-            </div>
-            <div class="phase-item" data-phase="coding">
-              <div class="phase-color" style="background-color: var(--color-coding);"></div>
-              <span class="phase-name">Coding</span>
-            </div>
-            <div class="phase-item" data-phase="launch">
-              <div class="phase-color" style="background-color: var(--color-launch);"></div>
-              <span class="phase-name">Launch</span>
-            </div>
-            <div class="phase-item" data-phase="support">
-              <div class="phase-color" style="background-color: var(--color-support);"></div>
-              <span class="phase-name">Support</span>
+          </div>
+
+          <!-- Importance (right side) -->
+          <div class="legend-section">
+            <h3>Importance</h3>
+            <div class="importance-list">
+              <div class="importance-item">
+                <div class="importance-visual">
+                  <div class="importance-circle active"></div>
+                </div>
+                <div class="importance-label">Less</div>
+              </div>
+              <div class="importance-item">
+                <div class="importance-visual">
+                  <div class="importance-circle"></div>
+                  <div class="importance-circle active"></div>
+                  <div class="importance-circle"></div>
+                </div>
+                <div class="importance-label">Average</div>
+              </div>
+              <div class="importance-item">
+                <div class="importance-visual">
+                  <div class="importance-circle"></div>
+                  <div class="importance-circle"></div>
+                  <div class="importance-circle active"></div>
+                </div>
+                <div class="importance-label">
+                  <span class="importance-value">Greater</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Involvement -->
-        <div class="legend-section">
-          <h3>Involvement</h3>
-          <div class="importance-list">
-            <div class="importance-item">
-              <div class="importance-visual">
-                <div class="importance-circle active"></div>
-              </div>
-              <div class="importance-label">
-                Less
-              </div>
-            </div>
-            <div class="importance-item">
-              <div class="importance-visual">
-                <div class="importance-circle active"></div>
-                <div class="importance-circle active"></div>
-              </div>
-              <div class="importance-label">
-                Average
-              </div>
-            </div>
-            <div class="importance-item">
-              <div class="importance-visual">
-                <div class="importance-circle active"></div>
-                <div class="importance-circle active"></div>
-                <div class="importance-circle active"></div>
-              </div>
-              <div class="importance-label">
-                <span class="importance-value">Greater</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Importance (right side) -->
-        <div class="legend-section">
-          <h3>Importance</h3>
-          <div class="importance-list">
-            <div class="importance-item">
-              <div class="importance-visual">
-                <div class="importance-circle active"></div>
-              </div>
-              <div class="importance-label">
-                Less
-              </div>
-            </div>
-            <div class="importance-item">
-              <div class="importance-visual">
-                <div class="importance-circle"></div>
-                <div class="importance-circle active"></div>
-                <div class="importance-circle"></div>
-              </div>
-              <div class="importance-label">
-                Average
-              </div>
-            </div>
-            <div class="importance-item">
-              <div class="importance-visual">
-                <div class="importance-circle"></div>
-                <div class="importance-circle"></div>
-                <div class="importance-circle active"></div>
-              </div>
-              <div class="importance-label">
-                <span class="importance-value">Greater</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="copyright">
-        © Preface Studios Limited 2020
+        <div class="copyright">© Preface Studios Limited 2020</div>
       </div>
     </div>
-  </div>
 
-  <!-- Bubble Editor Panel -->
-  <div id="editor-panel" class="editor-panel">
-    <div class="editor-header">
-      <h2>✏️ Edit Bubbles</h2>
-      <button id="editor-close" class="close-btn">×</button>
-    </div>
-
-    <div class="editor-content">
-      <!-- Bubble Selector -->
-      <div class="editor-section">
-        <h3>Select Bubble</h3>
-        <select id="bubble-selector" class="bubble-selector">
-          <option value="">-- Choose a bubble --</option>
-        </select>
+    <!-- Bubble Editor Panel -->
+    <div id="editor-panel" class="editor-panel">
+      <div class="editor-header">
+        <h2>✏️ Edit Bubbles</h2>
+        <button id="editor-close" class="close-btn">×</button>
       </div>
 
-      <!-- Bubble Properties (shown when a bubble is selected) -->
-      <div id="bubble-editor" class="bubble-properties" style="display: none;">
-
-        <!-- Basic Properties -->
+      <div class="editor-content">
+        <!-- Bubble Selector -->
         <div class="editor-section">
-          <h3>Basic Properties</h3>
+          <h3>Select Bubble</h3>
+          <select id="bubble-selector" class="bubble-selector">
+            <option value="">-- Choose a bubble --</option>
+          </select>
+        </div>
 
+        <!-- Bubble Properties (shown when a bubble is selected) -->
+        <div id="bubble-editor" class="bubble-properties" style="display: none">
+          <!-- Basic Properties -->
+          <div class="editor-section">
+            <h3>Basic Properties</h3>
+
+            <div class="setting-item">
+              <label>Phase</label>
+              <select id="edit-phase">
+                <option value="contact">Contact</option>
+                <option value="discovery">Discovery</option>
+                <option value="content">Content</option>
+                <option value="uxue">UX/UE</option>
+                <option value="coding">Coding</option>
+                <option value="launch">Launch</option>
+                <option value="support">Support</option>
+              </select>
+            </div>
+
+            <div class="setting-item">
+              <label>Size</label>
+              <input
+                type="number"
+                id="edit-size"
+                min="1"
+                max="100"
+                step="0.1"
+                value="10" />
+            </div>
+
+            <div class="setting-item">
+              <label>Position (X)</label>
+              <input type="number" id="edit-x" step="0.5" min="0" max="50" />
+            </div>
+          </div>
+
+          <!-- Preface Descriptions -->
+          <div class="editor-section">
+            <h3>Preface Descriptions</h3>
+
+            <!-- Preface 1 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-preface-1" />
+                Preface Description 1
+              </label>
+            </div>
+
+            <div id="preface-controls-1" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-preface-label-1"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-preface-size-1">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-preface-weight-1">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Line X</label>
+                <input
+                  type="number"
+                  id="edit-preface-lineX-1"
+                  step="0.5"
+                  min="0"
+                  max="50" />
+              </div>
+
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input
+                  type="number"
+                  id="edit-preface-lineY-1"
+                  step="0.5"
+                  min="-15"
+                  max="0" />
+                <span class="help-text">Negative = above timeline</span>
+              </div>
+
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input
+                  type="number"
+                  id="edit-preface-anchor-1"
+                  step="0.1"
+                  min="-1"
+                  max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+
+            <!-- Preface 2 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-preface-2" />
+                Preface Description 2
+              </label>
+            </div>
+
+            <div id="preface-controls-2" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-preface-label-2"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-preface-size-2">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-preface-weight-2">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Line X</label>
+                <input
+                  type="number"
+                  id="edit-preface-lineX-2"
+                  step="0.5"
+                  min="0"
+                  max="50" />
+              </div>
+
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input
+                  type="number"
+                  id="edit-preface-lineY-2"
+                  step="0.5"
+                  min="-15"
+                  max="0" />
+                <span class="help-text">Negative = above timeline</span>
+              </div>
+
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input
+                  type="number"
+                  id="edit-preface-anchor-2"
+                  step="0.1"
+                  min="-1"
+                  max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+
+            <!-- Preface 3 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-preface-3" />
+                Preface Description 3
+              </label>
+            </div>
+
+            <div id="preface-controls-3" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-preface-label-3"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-preface-size-3">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-preface-weight-3">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Line X</label>
+                <input
+                  type="number"
+                  id="edit-preface-lineX-3"
+                  step="0.5"
+                  min="0"
+                  max="50" />
+              </div>
+
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input
+                  type="number"
+                  id="edit-preface-lineY-3"
+                  step="0.5"
+                  min="-15"
+                  max="0" />
+                <span class="help-text">Negative = above timeline</span>
+              </div>
+
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input
+                  type="number"
+                  id="edit-preface-anchor-3"
+                  step="0.1"
+                  min="-1"
+                  max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Descriptions -->
+          <div class="editor-section">
+            <h3>Client Descriptions</h3>
+
+            <!-- Client 1 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-client-1" />
+                Client Description 1
+              </label>
+            </div>
+
+            <div id="client-controls-1" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-client-label-1"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-client-size-1">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-client-weight-1">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Line X</label>
+                <input
+                  type="number"
+                  id="edit-client-lineX-1"
+                  step="0.5"
+                  min="0"
+                  max="50" />
+              </div>
+
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input
+                  type="number"
+                  id="edit-client-lineY-1"
+                  step="0.5"
+                  min="0"
+                  max="15" />
+                <span class="help-text">Positive = below timeline</span>
+              </div>
+
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input
+                  type="number"
+                  id="edit-client-anchor-1"
+                  step="0.1"
+                  min="-1"
+                  max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+
+            <!-- Client 2 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-client-2" />
+                Client Description 2
+              </label>
+            </div>
+
+            <div id="client-controls-2" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-client-label-2"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-client-size-2">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-client-weight-2">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Line X</label>
+                <input
+                  type="number"
+                  id="edit-client-lineX-2"
+                  step="0.5"
+                  min="0"
+                  max="50" />
+              </div>
+
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input
+                  type="number"
+                  id="edit-client-lineY-2"
+                  step="0.5"
+                  min="0"
+                  max="15" />
+                <span class="help-text">Positive = below timeline</span>
+              </div>
+
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input
+                  type="number"
+                  id="edit-client-anchor-2"
+                  step="0.1"
+                  min="-1"
+                  max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+
+            <!-- Client 3 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-client-3" />
+                Client Description 3
+              </label>
+            </div>
+
+            <div id="client-controls-3" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-client-label-3"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-client-size-3">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-client-weight-3">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <label>Line X</label>
+                <input
+                  type="number"
+                  id="edit-client-lineX-3"
+                  step="0.5"
+                  min="0"
+                  max="50" />
+              </div>
+
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input
+                  type="number"
+                  id="edit-client-lineY-3"
+                  step="0.5"
+                  min="0"
+                  max="15" />
+                <span class="help-text">Positive = below timeline</span>
+              </div>
+
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input
+                  type="number"
+                  id="edit-client-anchor-3"
+                  step="0.1"
+                  min="-1"
+                  max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="editor-section">
+            <button id="save-bubble" class="save-btn">Save Changes</button>
+            <button id="delete-bubble" class="delete-btn">Delete Bubble</button>
+          </div>
+        </div>
+
+        <!-- Add New Bubble -->
+        <div class="editor-section">
+          <button id="add-bubble" class="add-btn">+ Add New Bubble</button>
+        </div>
+
+        <!-- Export Data -->
+        <div class="editor-section">
+          <button id="export-data" class="export-btn">
+            📋 Export to data.js
+          </button>
+          <div id="export-output" class="export-output" style="display: none">
+            <textarea id="export-textarea" readonly rows="10"></textarea>
+            <button id="copy-export" class="copy-btn">Copy to Clipboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel">
+      <div class="settings-header">
+        <h2>⚙️ Visual Settings</h2>
+        <button id="settings-close" class="close-btn">×</button>
+      </div>
+
+      <div class="settings-content">
+        <!-- Bubble Colors -->
+        <div class="settings-section">
+          <h3>Bubble Colors</h3>
           <div class="setting-item">
-            <label>Phase</label>
-            <select id="edit-phase">
-              <option value="contact">Contact</option>
-              <option value="discovery">Discovery</option>
-              <option value="content">Content</option>
-              <option value="uxue">UX/UE</option>
-              <option value="coding">Coding</option>
-              <option value="launch">Launch</option>
-              <option value="support">Support</option>
+            <label>Contact</label>
+            <input type="color" id="color-contact" value="#e63946" />
+          </div>
+          <div class="setting-item">
+            <label>Discovery</label>
+            <input type="color" id="color-discovery" value="#f4a261" />
+          </div>
+          <div class="setting-item">
+            <label>Content</label>
+            <input type="color" id="color-content" value="#e9c46a" />
+          </div>
+          <div class="setting-item">
+            <label>UX/UE</label>
+            <input type="color" id="color-uxue" value="#8ac926" />
+          </div>
+          <div class="setting-item">
+            <label>Coding</label>
+            <input type="color" id="color-coding" value="#43aa8b" />
+          </div>
+          <div class="setting-item">
+            <label>Launch</label>
+            <input type="color" id="color-launch" value="#e879a0" />
+          </div>
+          <div class="setting-item">
+            <label>Support</label>
+            <input type="color" id="color-support" value="#adb5bd" />
+          </div>
+        </div>
+
+        <!-- Middle Line -->
+        <div class="settings-section">
+          <h3>Middle Timeline Line</h3>
+          <div class="setting-item">
+            <label>Color</label>
+            <input type="color" id="timeline-color" value="#333333" />
+          </div>
+          <div class="setting-item">
+            <label>Width</label>
+            <input
+              type="range"
+              id="timeline-width"
+              min="0.01"
+              max="0.2"
+              step="0.01"
+              value="0.18" />
+            <span class="value-display">0.18</span>
+          </div>
+          <div class="setting-item">
+            <label>Padding</label>
+            <input
+              type="range"
+              id="timeline-padding"
+              min="0"
+              max="30"
+              step="1"
+              value="0" />
+            <span class="value-display">0%</span>
+          </div>
+        </div>
+
+        <!-- Description Lines -->
+        <div class="settings-section">
+          <h3>Description Lines</h3>
+          <div class="setting-item">
+            <label>Color</label>
+            <input type="color" id="connection-color" value="#999999" />
+          </div>
+          <div class="setting-item">
+            <label>Width</label>
+            <input
+              type="range"
+              id="connection-width"
+              min="0.01"
+              max="0.2"
+              step="0.01"
+              value="0.03" />
+            <span class="value-display">0.03</span>
+          </div>
+          <div class="setting-item">
+            <label>Line Type</label>
+            <select id="connection-type">
+              <option value="dashed">Dashed</option>
+              <option value="solid" selected>Solid</option>
+              <option value="dotted">Dotted</option>
             </select>
           </div>
-
           <div class="setting-item">
-            <label>Size</label>
-            <input type="number" id="edit-size" min="1" max="100" step="0.1" value="10">
+            <label>Text Padding</label>
+            <input
+              type="range"
+              id="connection-padding"
+              min="-1"
+              max="1"
+              step="0.05"
+              value="-0.05" />
+            <span class="value-display">-0.05</span>
           </div>
+        </div>
 
+        <!-- Text Style -->
+        <div class="settings-section">
+          <h3>Text Style</h3>
           <div class="setting-item">
-            <label>Position (X)</label>
-            <input type="number" id="edit-x" step="0.5" min="0" max="50">
+            <label>Color</label>
+            <input type="color" id="text-color" value="#333333" />
+          </div>
+          <div class="setting-item">
+            <label>Indicator Style</label>
+            <select id="indicator-style">
+              <option value="none">None</option>
+              <option value="circle-dot">Circle Dot</option>
+              <option value="solid-circle" selected>Solid Circle</option>
+              <option value="hollow-circle">Hollow Circle</option>
+              <option value="square">Square</option>
+              <option value="diamond">Diamond</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <label>Indicator Size</label>
+            <input
+              type="range"
+              id="indicator-size"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value="0.1" />
+            <span class="value-display">0.1</span>
+          </div>
+          <div class="setting-item">
+            <label>Indicator Color</label>
+            <input type="color" id="indicator-color" value="#666666" />
+          </div>
+          <div class="setting-item">
+            <label>Indicator Stroke</label>
+            <input
+              type="range"
+              id="indicator-stroke-width"
+              min="0.01"
+              max="0.2"
+              step="0.01"
+              value="0.05" />
+            <span class="value-display">0.05</span>
+          </div>
+          <div class="setting-item">
+            <label>Font Family</label>
+            <select id="font-family">
+              <option
+                value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+                System Default
+              </option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Verdana, sans-serif">Verdana</option>
+              <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+              <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+            </select>
           </div>
         </div>
 
-        <!-- Preface Descriptions -->
-        <div class="editor-section">
-          <h3>Preface Descriptions</h3>
-
-          <!-- Preface 1 -->
-          <div class="setting-item checkbox-item">
-            <label>
-              <input type="checkbox" id="edit-has-preface-1">
-              Preface Description 1
-            </label>
+        <!-- Bubble Interaction -->
+        <div class="settings-section">
+          <h3>Bubble Interaction</h3>
+          <div class="setting-item">
+            <label>Hover Scale</label>
+            <input
+              type="range"
+              id="bubble-hover-scale"
+              min="1"
+              max="1.5"
+              step="0.05"
+              value="1.05" />
+            <span class="value-display">1.05</span>
           </div>
-
-          <div id="preface-controls-1" style="display: none;">
-            <div class="setting-item">
-              <label>Label</label>
-              <textarea id="edit-preface-label-1" rows="3"
-                placeholder="Multi-line text (use Enter for new lines)"></textarea>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Size</label>
-              <select id="edit-preface-size-1">
-                <option value="M">M (Medium)</option>
-                <option value="L">L (Large)</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="3XL">3XL</option>
-                <option value="4XL">4XL</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Weight</label>
-              <select id="edit-preface-weight-1">
-                <option value="light">Light</option>
-                <option value="regular">Regular</option>
-                <option value="black">Black</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Line X</label>
-              <input type="number" id="edit-preface-lineX-1" step="0.5" min="0" max="50">
-            </div>
-
-            <div class="setting-item">
-              <label>Line Y</label>
-              <input type="number" id="edit-preface-lineY-1" step="0.5" min="-15" max="0">
-              <span class="help-text">Negative = above timeline</span>
-            </div>
-
-            <div class="setting-item">
-              <label>Anchor</label>
-              <input type="number" id="edit-preface-anchor-1" step="0.1" min="-1" max="1">
-              <span class="help-text">-1 (left) to 1 (right)</span>
-            </div>
+          <div class="setting-item">
+            <label>Hover Line Color</label>
+            <input type="color" id="connection-hover-color" value="#e63946" />
           </div>
-
-          <!-- Preface 2 -->
-          <div class="setting-item checkbox-item">
-            <label>
-              <input type="checkbox" id="edit-has-preface-2">
-              Preface Description 2
-            </label>
+          <div class="setting-item">
+            <label>Hover Line Width</label>
+            <input
+              type="range"
+              id="connection-hover-width"
+              min="0.01"
+              max="0.3"
+              step="0.01"
+              value="0.1" />
+            <span class="value-display">0.1</span>
           </div>
-
-          <div id="preface-controls-2" style="display: none;">
-            <div class="setting-item">
-              <label>Label</label>
-              <textarea id="edit-preface-label-2" rows="3"
-                placeholder="Multi-line text (use Enter for new lines)"></textarea>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Size</label>
-              <select id="edit-preface-size-2">
-                <option value="M">M (Medium)</option>
-                <option value="L">L (Large)</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="3XL">3XL</option>
-                <option value="4XL">4XL</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Weight</label>
-              <select id="edit-preface-weight-2">
-                <option value="light">Light</option>
-                <option value="regular">Regular</option>
-                <option value="black">Black</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Line X</label>
-              <input type="number" id="edit-preface-lineX-2" step="0.5" min="0" max="50">
-            </div>
-
-            <div class="setting-item">
-              <label>Line Y</label>
-              <input type="number" id="edit-preface-lineY-2" step="0.5" min="-15" max="0">
-              <span class="help-text">Negative = above timeline</span>
-            </div>
-
-            <div class="setting-item">
-              <label>Anchor</label>
-              <input type="number" id="edit-preface-anchor-2" step="0.1" min="-1" max="1">
-              <span class="help-text">-1 (left) to 1 (right)</span>
-            </div>
+          <div class="setting-item">
+            <label>Indicator Hover Stroke</label>
+            <input
+              type="range"
+              id="indicator-hover-stroke"
+              min="0.01"
+              max="0.3"
+              step="0.01"
+              value="0.1" />
+            <span class="value-display">0.1</span>
           </div>
-
-          <!-- Preface 3 -->
-          <div class="setting-item checkbox-item">
-            <label>
-              <input type="checkbox" id="edit-has-preface-3">
-              Preface Description 3
-            </label>
+          <div class="setting-item">
+            <label>Hover Text Scale</label>
+            <input
+              type="range"
+              id="connection-hover-text-scale"
+              min="1.0"
+              max="1.5"
+              step="0.05"
+              value="1.0" />
+            <span class="value-display">1.0</span>
           </div>
-
-          <div id="preface-controls-3" style="display: none;">
-            <div class="setting-item">
-              <label>Label</label>
-              <textarea id="edit-preface-label-3" rows="3"
-                placeholder="Multi-line text (use Enter for new lines)"></textarea>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Size</label>
-              <select id="edit-preface-size-3">
-                <option value="M">M (Medium)</option>
-                <option value="L">L (Large)</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="3XL">3XL</option>
-                <option value="4XL">4XL</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Weight</label>
-              <select id="edit-preface-weight-3">
-                <option value="light">Light</option>
-                <option value="regular">Regular</option>
-                <option value="black">Black</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Line X</label>
-              <input type="number" id="edit-preface-lineX-3" step="0.5" min="0" max="50">
-            </div>
-
-            <div class="setting-item">
-              <label>Line Y</label>
-              <input type="number" id="edit-preface-lineY-3" step="0.5" min="-15" max="0">
-              <span class="help-text">Negative = above timeline</span>
-            </div>
-
-            <div class="setting-item">
-              <label>Anchor</label>
-              <input type="number" id="edit-preface-anchor-3" step="0.1" min="-1" max="1">
-              <span class="help-text">-1 (left) to 1 (right)</span>
-            </div>
+          <div class="setting-item">
+            <label>Blend Mode</label>
+            <select id="bubble-blend-mode">
+              <option value="normal">Normal</option>
+              <option value="multiply" selected>Multiply</option>
+              <option value="screen">Screen</option>
+              <option value="overlay">Overlay</option>
+              <option value="darken">Darken</option>
+              <option value="lighten">Lighten</option>
+              <option value="color-dodge">Color Dodge</option>
+              <option value="color-burn">Color Burn</option>
+              <option value="hard-light">Hard Light</option>
+              <option value="soft-light">Soft Light</option>
+              <option value="difference">Difference</option>
+              <option value="exclusion">Exclusion</option>
+              <option value="hue">Hue</option>
+              <option value="saturation">Saturation</option>
+              <option value="color">Color</option>
+              <option value="luminosity">Luminosity</option>
+            </select>
           </div>
         </div>
 
-        <!-- Client Descriptions -->
-        <div class="editor-section">
-          <h3>Client Descriptions</h3>
-
-          <!-- Client 1 -->
-          <div class="setting-item checkbox-item">
-            <label>
-              <input type="checkbox" id="edit-has-client-1">
-              Client Description 1
-            </label>
-          </div>
-
-          <div id="client-controls-1" style="display: none;">
-            <div class="setting-item">
-              <label>Label</label>
-              <textarea id="edit-client-label-1" rows="3"
-                placeholder="Multi-line text (use Enter for new lines)"></textarea>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Size</label>
-              <select id="edit-client-size-1">
-                <option value="M">M (Medium)</option>
-                <option value="L">L (Large)</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="3XL">3XL</option>
-                <option value="4XL">4XL</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Weight</label>
-              <select id="edit-client-weight-1">
-                <option value="light">Light</option>
-                <option value="regular">Regular</option>
-                <option value="black">Black</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Line X</label>
-              <input type="number" id="edit-client-lineX-1" step="0.5" min="0" max="50">
-            </div>
-
-            <div class="setting-item">
-              <label>Line Y</label>
-              <input type="number" id="edit-client-lineY-1" step="0.5" min="0" max="15">
-              <span class="help-text">Positive = below timeline</span>
-            </div>
-
-            <div class="setting-item">
-              <label>Anchor</label>
-              <input type="number" id="edit-client-anchor-1" step="0.1" min="-1" max="1">
-              <span class="help-text">-1 (left) to 1 (right)</span>
-            </div>
-          </div>
-
-          <!-- Client 2 -->
-          <div class="setting-item checkbox-item">
-            <label>
-              <input type="checkbox" id="edit-has-client-2">
-              Client Description 2
-            </label>
-          </div>
-
-          <div id="client-controls-2" style="display: none;">
-            <div class="setting-item">
-              <label>Label</label>
-              <textarea id="edit-client-label-2" rows="3"
-                placeholder="Multi-line text (use Enter for new lines)"></textarea>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Size</label>
-              <select id="edit-client-size-2">
-                <option value="M">M (Medium)</option>
-                <option value="L">L (Large)</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="3XL">3XL</option>
-                <option value="4XL">4XL</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Weight</label>
-              <select id="edit-client-weight-2">
-                <option value="light">Light</option>
-                <option value="regular">Regular</option>
-                <option value="black">Black</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Line X</label>
-              <input type="number" id="edit-client-lineX-2" step="0.5" min="0" max="50">
-            </div>
-
-            <div class="setting-item">
-              <label>Line Y</label>
-              <input type="number" id="edit-client-lineY-2" step="0.5" min="0" max="15">
-              <span class="help-text">Positive = below timeline</span>
-            </div>
-
-            <div class="setting-item">
-              <label>Anchor</label>
-              <input type="number" id="edit-client-anchor-2" step="0.1" min="-1" max="1">
-              <span class="help-text">-1 (left) to 1 (right)</span>
-            </div>
-          </div>
-
-          <!-- Client 3 -->
-          <div class="setting-item checkbox-item">
-            <label>
-              <input type="checkbox" id="edit-has-client-3">
-              Client Description 3
-            </label>
-          </div>
-
-          <div id="client-controls-3" style="display: none;">
-            <div class="setting-item">
-              <label>Label</label>
-              <textarea id="edit-client-label-3" rows="3"
-                placeholder="Multi-line text (use Enter for new lines)"></textarea>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Size</label>
-              <select id="edit-client-size-3">
-                <option value="M">M (Medium)</option>
-                <option value="L">L (Large)</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="3XL">3XL</option>
-                <option value="4XL">4XL</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Font Weight</label>
-              <select id="edit-client-weight-3">
-                <option value="light">Light</option>
-                <option value="regular">Regular</option>
-                <option value="black">Black</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label>Line X</label>
-              <input type="number" id="edit-client-lineX-3" step="0.5" min="0" max="50">
-            </div>
-
-            <div class="setting-item">
-              <label>Line Y</label>
-              <input type="number" id="edit-client-lineY-3" step="0.5" min="0" max="15">
-              <span class="help-text">Positive = below timeline</span>
-            </div>
-
-            <div class="setting-item">
-              <label>Anchor</label>
-              <input type="number" id="edit-client-anchor-3" step="0.1" min="-1" max="1">
-              <span class="help-text">-1 (left) to 1 (right)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="editor-section">
-          <button id="save-bubble" class="save-btn">Save Changes</button>
-          <button id="delete-bubble" class="delete-btn">Delete Bubble</button>
-        </div>
-      </div>
-
-      <!-- Add New Bubble -->
-      <div class="editor-section">
-        <button id="add-bubble" class="add-btn">+ Add New Bubble</button>
-      </div>
-
-      <!-- Export Data -->
-      <div class="editor-section">
-        <button id="export-data" class="export-btn">📋 Export to data.js</button>
-        <div id="export-output" class="export-output" style="display: none;">
-          <textarea id="export-textarea" readonly rows="10"></textarea>
-          <button id="copy-export" class="copy-btn">Copy to Clipboard</button>
+        <!-- Reset Button -->
+        <div class="settings-section">
+          <button id="reset-settings" class="reset-btn">
+            Reset to Defaults
+          </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Settings Panel -->
-  <div id="settings-panel" class="settings-panel">
-    <div class="settings-header">
-      <h2>⚙️ Visual Settings</h2>
-      <button id="settings-close" class="close-btn">×</button>
-    </div>
-
-    <div class="settings-content">
-      <!-- Bubble Colors -->
-      <div class="settings-section">
-        <h3>Bubble Colors</h3>
-        <div class="setting-item">
-          <label>Contact</label>
-          <input type="color" id="color-contact" value="#e63946">
-        </div>
-        <div class="setting-item">
-          <label>Discovery</label>
-          <input type="color" id="color-discovery" value="#f4a261">
-        </div>
-        <div class="setting-item">
-          <label>Content</label>
-          <input type="color" id="color-content" value="#e9c46a">
-        </div>
-        <div class="setting-item">
-          <label>UX/UE</label>
-          <input type="color" id="color-uxue" value="#8ac926">
-        </div>
-        <div class="setting-item">
-          <label>Coding</label>
-          <input type="color" id="color-coding" value="#43aa8b">
-        </div>
-        <div class="setting-item">
-          <label>Launch</label>
-          <input type="color" id="color-launch" value="#e879a0">
-        </div>
-        <div class="setting-item">
-          <label>Support</label>
-          <input type="color" id="color-support" value="#adb5bd">
-        </div>
-      </div>
-
-      <!-- Middle Line -->
-      <div class="settings-section">
-        <h3>Middle Timeline Line</h3>
-        <div class="setting-item">
-          <label>Color</label>
-          <input type="color" id="timeline-color" value="#333333">
-        </div>
-        <div class="setting-item">
-          <label>Width</label>
-          <input type="range" id="timeline-width" min="0.01" max="0.2" step="0.01" value="0.05">
-          <span class="value-display">0.05</span>
-        </div>
-        <div class="setting-item">
-          <label>Padding</label>
-          <input type="range" id="timeline-padding" min="0" max="30" step="1" value="0">
-          <span class="value-display">0%</span>
-        </div>
-      </div>
-
-      <!-- Description Lines -->
-      <div class="settings-section">
-        <h3>Description Lines</h3>
-        <div class="setting-item">
-          <label>Color</label>
-          <input type="color" id="connection-color" value="#999999">
-        </div>
-        <div class="setting-item">
-          <label>Width</label>
-          <input type="range" id="connection-width" min="0.01" max="0.2" step="0.01" value="0.05">
-          <span class="value-display">0.05</span>
-        </div>
-        <div class="setting-item">
-          <label>Line Type</label>
-          <select id="connection-type">
-            <option value="dashed">Dashed</option>
-            <option value="solid">Solid</option>
-            <option value="dotted">Dotted</option>
-          </select>
-        </div>
-        <div class="setting-item">
-          <label>Text Padding</label>
-          <input type="range" id="connection-padding" min="-1" max="1" step="0.05" value="0.3">
-          <span class="value-display">0.3</span>
-        </div>
-      </div>
-
-      <!-- Text Style -->
-      <div class="settings-section">
-        <h3>Text Style</h3>
-        <div class="setting-item">
-          <label>Color</label>
-          <input type="color" id="text-color" value="#333333">
-        </div>
-        <div class="setting-item">
-          <label>Indicator Style</label>
-          <select id="indicator-style">
-            <option value="none">None</option>
-            <option value="circle-dot" selected>Circle Dot</option>
-            <option value="solid-circle">Solid Circle</option>
-            <option value="hollow-circle">Hollow Circle</option>
-            <option value="square">Square</option>
-            <option value="diamond">Diamond</option>
-          </select>
-        </div>
-        <div class="setting-item">
-          <label>Indicator Size</label>
-          <input type="range" id="indicator-size" min="0.1" max="1" step="0.05" value="0.4">
-          <span class="value-display">0.4</span>
-        </div>
-        <div class="setting-item">
-          <label>Indicator Color</label>
-          <input type="color" id="indicator-color" value="#999999">
-        </div>
-        <div class="setting-item">
-          <label>Indicator Stroke</label>
-          <input type="range" id="indicator-stroke-width" min="0.01" max="0.2" step="0.01" value="0.05">
-          <span class="value-display">0.05</span>
-        </div>
-        <div class="setting-item">
-          <label>Font Family</label>
-          <select id="font-family">
-            <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-              System Default</option>
-            <option value="Arial, sans-serif">Arial</option>
-            <option value="'Times New Roman', serif">Times New Roman</option>
-            <option value="'Courier New', monospace">Courier New</option>
-            <option value="Georgia, serif">Georgia</option>
-            <option value="Verdana, sans-serif">Verdana</option>
-            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Bubble Interaction -->
-      <div class="settings-section">
-        <h3>Bubble Interaction</h3>
-        <div class="setting-item">
-          <label>Hover Scale</label>
-          <input type="range" id="bubble-hover-scale" min="1" max="1.5" step="0.05" value="1.05">
-          <span class="value-display">1.05</span>
-        </div>
-        <div class="setting-item">
-          <label>Hover Line Color</label>
-          <input type="color" id="connection-hover-color" value="#e63946">
-        </div>
-        <div class="setting-item">
-          <label>Hover Line Width</label>
-          <input type="range" id="connection-hover-width" min="0.01" max="0.3" step="0.01" value="0.1">
-          <span class="value-display">0.1</span>
-        </div>
-        <div class="setting-item">
-          <label>Indicator Hover Stroke</label>
-          <input type="range" id="indicator-hover-stroke" min="0.01" max="0.3" step="0.01" value="0.1">
-          <span class="value-display">0.1</span>
-        </div>
-        <div class="setting-item">
-          <label>Hover Text Scale</label>
-          <input type="range" id="connection-hover-text-scale" min="1.0" max="1.5" step="0.05" value="1.0">
-          <span class="value-display">1.0</span>
-        </div>
-        <div class="setting-item">
-          <label>Blend Mode</label>
-          <select id="bubble-blend-mode">
-            <option value="normal">Normal</option>
-            <option value="multiply" selected>Multiply</option>
-            <option value="screen">Screen</option>
-            <option value="overlay">Overlay</option>
-            <option value="darken">Darken</option>
-            <option value="lighten">Lighten</option>
-            <option value="color-dodge">Color Dodge</option>
-            <option value="color-burn">Color Burn</option>
-            <option value="hard-light">Hard Light</option>
-            <option value="soft-light">Soft Light</option>
-            <option value="difference">Difference</option>
-            <option value="exclusion">Exclusion</option>
-            <option value="hue">Hue</option>
-            <option value="saturation">Saturation</option>
-            <option value="color">Color</option>
-            <option value="luminosity">Luminosity</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Reset Button -->
-      <div class="settings-section">
-        <button id="reset-settings" class="reset-btn">Reset to Defaults</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="app.js"></script>
-</body>
-
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>
