@@ -1,187 +1,197 @@
 /* Process Timeline Block - Shared Styles (editor + frontend) */
 
 .ppt-block {
-	--bubble-opacity: 0.7;
-	--bubble-hover-scale: 1.05;
-	--bubble-blend-mode: multiply;
-	--connection-hover-color: #e63946;
-	--connection-hover-width: 0.1;
-	--indicator-hover-stroke: 0.1;
-	--connection-hover-text-scale: 1;
+  --bubble-opacity: 0.7;
+  --bubble-hover-scale: 1.05;
+  --bubble-blend-mode: multiply;
+  --connection-hover-color: #e63946;
+  --connection-hover-width: 0.1;
+  --indicator-hover-stroke: 0.1;
+  --connection-hover-text-scale: 1;
 
-	/* Wide / Full alignment */
-	&.alignwide {
-		width: 100%;
-		max-width: var(--wp--style--global--wide-size, 1200px);
-		margin-left: auto;
-		margin-right: auto;
-	}
+  /* Wide / Full alignment */
+  &.alignwide {
+    width: 100%;
+    max-width: var(--wp--style--global--wide-size, 1200px);
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-	&.alignfull {
-		width: 100vw;
-		max-width: 100vw;
-		margin-left: calc(-50vw + 50%);
-		margin-right: calc(-50vw + 50%);
-	}
+  &.alignfull {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+  }
 }
 
 /* Controls bar */
 .ppt-controls {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.75rem;
-	flex-wrap: wrap;
-	padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
 }
 
 .ppt-view-toggle {
-	display: flex;
-	gap: 0.25rem;
+  display: flex;
+  gap: 0.25rem;
 }
 
 .ppt-view-btn {
-	padding: 0.4rem 0.8rem;
-	border: 1px solid #ddd;
-	background: #fff;
-	cursor: pointer;
-	font-size: 0.8rem;
-	border-radius: 0.25rem;
-	transition: all 0.2s;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
 
-	&:hover {
-		border-color: #999;
-	}
+  &:hover {
+    border-color: #999;
+  }
 
-	&.active {
-		background: #333;
-		color: #fff;
-		border-color: #333;
-	}
+  &.active {
+    background: #333;
+    color: #fff;
+    border-color: #333;
+  }
 }
 
 .ppt-version-buttons {
-	display: flex;
-	gap: 0.25rem;
-	flex-wrap: wrap;
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .ppt-version-btn {
-	padding: 0.4rem 0.8rem;
-	border: 1px solid #ddd;
-	background: #fff;
-	cursor: pointer;
-	font-size: 0.8rem;
-	border-radius: 0.25rem;
-	transition: all 0.2s;
-	white-space: nowrap;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  white-space: nowrap;
 
-	&:hover {
-		border-color: #999;
-	}
+  &:hover {
+    border-color: #999;
+  }
 
-	&.active {
-		background: #333;
-		color: #fff;
-		border-color: #333;
-	}
+  &.active {
+    background: #333;
+    color: #fff;
+    border-color: #333;
+  }
 }
 
 /* Timeline wrapper */
 .ppt-timeline-wrapper {
-	position: relative;
-	width: 100%;
-	overflow: visible;
-	padding: 2rem 0;
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  padding: 2rem 0;
 
-	&--horizontal {
-		overflow-x: auto;
-		overflow-y: visible;
-	}
+  &--horizontal {
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: var(--ppt-horizontal-max-width, none);
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-	&--vertical {
-		max-width: 1440px;
-		margin: 0 auto;
-		overflow-y: auto;
-	}
+  &--vertical {
+    max-width: 1440px;
+    margin: 0 auto;
+    overflow-y: auto;
+    max-height: var(--ppt-vertical-max-height, none);
+  }
 }
 
 /* SVG */
 .ppt-svg {
-	display: block;
-	overflow: visible;
-	width: 100%;
+  display: block;
+  overflow: visible;
+  width: 100%;
 }
 
 .ppt-timeline-wrapper--horizontal .ppt-svg {
-	min-width: 50rem;
+  min-width: 50rem;
 }
 
 .ppt-timeline-wrapper--vertical .ppt-svg {
-	max-width: 1440px;
-	height: auto;
-	min-height: 50rem;
-	margin: 0 auto;
+  max-width: 1440px;
+  height: auto;
+  min-height: 50rem;
+  margin: 0 auto;
 }
 
 /* SVG element styles */
 .timeline-line {
-	fill: none;
+  fill: none;
 }
 
 .bubble {
-	opacity: var(--bubble-opacity);
-	transition: opacity 0.3s, transform 0.3s;
-	transform-box: fill-box;
-	transform-origin: center;
-	cursor: pointer;
+  opacity: var(--bubble-opacity);
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+  transform-box: fill-box;
+  transform-origin: center;
+  cursor: pointer;
 
-	&:hover,
-	&.bubble-highlighted {
-		opacity: 1;
-		transform: scale(var(--bubble-hover-scale));
-	}
+  &:hover,
+  &.bubble-highlighted {
+    opacity: 1;
+    transform: scale(var(--bubble-hover-scale));
+  }
 }
 
 .connection-line {
-	fill: none;
-	transition: stroke 0.3s, stroke-width 0.3s;
+  fill: none;
+  transition:
+    stroke 0.3s,
+    stroke-width 0.3s;
 
-	&.highlighted {
-		stroke: var(--connection-hover-color) !important;
-		stroke-width: var(--connection-hover-width) !important;
-	}
+  &.highlighted {
+    stroke: var(--connection-hover-color) !important;
+    stroke-width: var(--connection-hover-width) !important;
+  }
 }
 
 .label-text {
-	text-anchor: middle;
-	white-space: pre;
-	line-height: 1.2;
-	transition: fill 0.3s, transform 0.3s;
-	transform-box: fill-box;
-	transform-origin: center;
-	cursor: pointer;
+  text-anchor: middle;
+  white-space: pre;
+  line-height: 1.2;
+  transition:
+    fill 0.3s,
+    transform 0.3s;
+  transform-box: fill-box;
+  transform-origin: center;
+  cursor: pointer;
 
-	&.highlighted {
-		fill: var(--connection-hover-color) !important;
-		transform: scale(var(--connection-hover-text-scale));
-	}
+  &.highlighted {
+    fill: var(--connection-hover-color) !important;
+    transform: scale(var(--connection-hover-text-scale));
+  }
 }
 
 .draggable-indicator {
-	cursor: pointer;
+  cursor: pointer;
 
-	&.highlighted circle,
-	&.highlighted rect,
-	&.highlighted polygon {
-		stroke: var(--connection-hover-color) !important;
-		fill: var(--connection-hover-color) !important;
-		stroke-width: var(--indicator-hover-stroke) !important;
-	}
+  &.highlighted circle,
+  &.highlighted rect,
+  &.highlighted polygon {
+    stroke: var(--connection-hover-color) !important;
+    fill: var(--connection-hover-color) !important;
+    stroke-width: var(--indicator-hover-stroke) !important;
+  }
 }
 
 .owner-label {
-	font-weight: bold;
-	text-transform: uppercase;
-	fill: #333;
+  font-weight: bold;
+  text-transform: uppercase;
+  fill: #333;
 }

@@ -520,6 +520,24 @@ export default function Edit({ attributes, setAttributes }) {
             checked={showVersionButtons}
             onChange={(val) => setAttributes({ showVersionButtons: val })}
           />
+          <RangeControl
+            label="Horizontal Max Width (px)"
+            help="0 = no limit. Constrains the timeline width in horizontal mode."
+            value={settings?.horizontalMaxWidth ?? 0}
+            onChange={(val) => updateSetting("horizontalMaxWidth", val)}
+            min={0}
+            max={3000}
+            step={10}
+          />
+          <RangeControl
+            label="Vertical Max Height (px)"
+            help="0 = no limit. Constrains the timeline height in vertical mode."
+            value={settings?.verticalMaxHeight ?? 0}
+            onChange={(val) => updateSetting("verticalMaxHeight", val)}
+            min={0}
+            max={5000}
+            step={10}
+          />
         </PanelBody>
 
         {/* ===== BUBBLE COLORS ===== */}

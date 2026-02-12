@@ -367,6 +367,9 @@ export const DEFAULT_SETTINGS = {
   connectionHoverTextScale: 1.0,
   labelDistanceHorizontal: 1.0,
   labelDistanceVertical: 1.0,
+  // Max dimensions
+  horizontalMaxWidth: 0,
+  verticalMaxHeight: 0,
   // Entry animation settings
   entryAnimation: true,
   entryAnimationThreshold: 0.5,
