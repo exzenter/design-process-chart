@@ -81,23 +81,17 @@ function playEntryAnimation(container, settings, viewMode) {
   labelEls.sort(sortByStep);
 
   // Hide all indicators/lines/labels
-  const secondaryEls = [];
-  indicatorEls.forEach((el, i) => {
+  indicatorEls.forEach((el) => {
     el.style.opacity = "0";
     el.style.transform = "scale(0)";
     el.style.transformOrigin = "center";
     el.style.transformBox = "fill-box";
-    secondaryEls.push({ el, index: i });
   });
-  lineEls.forEach((el, i) => {
+  lineEls.forEach((el) => {
     el.style.opacity = "0";
-    secondaryEls.push({ el, index: i, isLine: true });
   });
-  labelEls.forEach((el, i) => {
+  labelEls.forEach((el) => {
     el.style.opacity = "0";
-    el.style.transform = "translateY(8px)";
-    el.style.transformBox = "fill-box";
-    secondaryEls.push({ el, index: i, isLabel: true });
   });
 
   const totalBubbleTime = bubbleDuration + bubbleStagger * (bubbles.length - 1);
@@ -149,15 +143,30 @@ function playEntryAnimation(container, settings, viewMode) {
         el.style.opacity = String(e);
       });
 
-      labelEls.forEach((el, i) => {
-        const delay = i * indicatorStagger;
+      labelEls.forEach((el) => {
+        // Match label to its indicator's stagger index via data attributes
+        const key =
+          el.dataset.stepId +
+          "_" +
+          el.dataset.taskType +
+          "_" +
+          el.dataset.taskIndex;
+        const matchIdx = indicatorEls.findIndex(
+          (ind) =>
+            ind.dataset.stepId +
+              "_" +
+              ind.dataset.taskType +
+              "_" +
+              ind.dataset.taskIndex ===
+            key,
+        );
+        const delay = (matchIdx >= 0 ? matchIdx : 0) * indicatorStagger;
         const localT = Math.min(
           Math.max((phase2Elapsed - delay) / indicatorDuration, 0),
           1,
         );
         const e = ease(localT);
         el.style.opacity = String(e);
-        el.style.transform = `translateY(${8 * (1 - e)}px)`;
       });
     }
 
@@ -179,8 +188,6 @@ function playEntryAnimation(container, settings, viewMode) {
       });
       labelEls.forEach((el) => {
         el.style.opacity = "";
-        el.style.transform = "";
-        el.style.transformBox = "";
       });
     }
   };
