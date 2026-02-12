@@ -130,4 +130,6 @@ export const DEFAULT_SETTINGS = {
 	connectionHoverWidth: 0.1,
 	indicatorHoverStroke: 0.1,
 	connectionHoverTextScale: 1.0,
+	labelDistanceHorizontal: 1.0,
+	labelDistanceVertical: 1.0,
 };

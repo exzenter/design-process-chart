@@ -105,17 +105,32 @@
 
 	/* Draggable cursor styles */
 	&.edit-mode {
+		user-select: none; /* Prevent text selection while dragging */
+
+		svg {
+			pointer-events: all; /* Ensure SVG captures all pointer events */
+		}
+
 		.bubble {
 			cursor: move;
 		}
 
 		.draggable-label {
 			cursor: move;
+			pointer-events: all;
 		}
 
 		.draggable-indicator {
 			cursor: ew-resize; /* horizontal resize for anchor adjustment */
+			pointer-events: all;
 		}
+	}
+}
+
+/* Prevent Gutenberg block dragging when in edit mode */
+.wp-block[data-block-dragging-disabled='true'] {
+	.block-editor-block-mover {
+		pointer-events: none;
 	}
 }
 

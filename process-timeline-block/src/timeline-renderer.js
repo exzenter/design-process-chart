@@ -104,7 +104,9 @@ function renderIndicator( svg, x, y, style, color, strokeWidth, size ) {
 
 function renderConnection( svg, bx, by, task, radius, isVertical, stepId, owner, taskIndex, settings ) {
 	const labelX = task.lineX;
-	const labelY = isVertical ? task.lineY : by + task.lineY;
+	const distanceModifier = isVertical ? ( settings.labelDistanceVertical || 1.0 ) : ( settings.labelDistanceHorizontal || 1.0 );
+	const adjustedLineY = task.lineY * distanceModifier;
+	const labelY = isVertical ? task.lineY : by + adjustedLineY;
 	const angle = Math.atan2( labelY - by, labelX - bx );
 
 	let xShift = 0;
@@ -294,7 +296,10 @@ function renderStep( svg, step, centerLine, isVertical, phases, settings ) {
 
 function renderHorizontal( container, steps, phases, settings ) {
 	const width = 50;
-	const height = 20;
+	const horizontalModifier = settings.labelDistanceHorizontal || 1.0;
+	const minHeight = 10;
+	const labelSpace = 10;
+	const height = minHeight + labelSpace * horizontalModifier;
 	const paddingPercent = ( settings.timelinePadding || 0 ) / 100;
 	const paddingX = width * paddingPercent;
 
@@ -309,12 +314,13 @@ function renderHorizontal( container, steps, phases, settings ) {
 	tl.setAttribute( 'stroke', settings.timelineColor );
 	svg.appendChild( tl );
 
-	const prefaceLabel = createText( 1, centerY - 6.5, 'PREFACE', 0.4 );
+	const labelOffset = 6.5 * horizontalModifier;
+	const prefaceLabel = createText( 1, centerY - labelOffset, 'PREFACE', 0.4 );
 	prefaceLabel.classList.add( 'owner-label' );
 	prefaceLabel.setAttribute( 'text-anchor', 'start' );
 	svg.appendChild( prefaceLabel );
 
-	const clientLabel = createText( 1, centerY + 7, 'CLIENT', 0.4 );
+	const clientLabel = createText( 1, centerY + labelOffset + 0.5, 'CLIENT', 0.4 );
 	clientLabel.classList.add( 'owner-label' );
 	clientLabel.setAttribute( 'text-anchor', 'start' );
 	svg.appendChild( clientLabel );
@@ -328,7 +334,10 @@ function renderHorizontal( container, steps, phases, settings ) {
 }
 
 function renderVertical( container, steps, phases, settings ) {
-	const width = 20;
+	const verticalModifier = settings.labelDistanceVertical || 1.0;
+	const minWidth = 10;
+	const labelSpace = 10;
+	const width = minWidth + labelSpace * verticalModifier;
 	const height = 50;
 	const paddingPercent = ( settings.timelinePadding || 0 ) / 100;
 	const paddingY = height * paddingPercent;
@@ -344,12 +353,13 @@ function renderVertical( container, steps, phases, settings ) {
 	tl.setAttribute( 'stroke', settings.timelineColor );
 	svg.appendChild( tl );
 
-	const prefaceLabel = createText( centerX - 6.5, 2, 'PREFACE', 0.4 );
+	const labelOffsetX = 6.5 * verticalModifier;
+	const prefaceLabel = createText( centerX - labelOffsetX, 2, 'PREFACE', 0.4 );
 	prefaceLabel.classList.add( 'owner-label' );
 	prefaceLabel.setAttribute( 'text-anchor', 'middle' );
 	svg.appendChild( prefaceLabel );
 
-	const clientLabel = createText( centerX + 6.5, 2, 'CLIENT', 0.4 );
+	const clientLabel = createText( centerX + labelOffsetX, 2, 'CLIENT', 0.4 );
 	clientLabel.classList.add( 'owner-label' );
 	clientLabel.setAttribute( 'text-anchor', 'middle' );
 	svg.appendChild( clientLabel );
@@ -366,14 +376,14 @@ function renderVertical( container, steps, phases, settings ) {
 			preface: prefaceArray
 				? prefaceArray.map( ( t ) => ( {
 					...t,
-					lineX: centerX - Math.abs( t.lineY ),
+					lineX: centerX - Math.abs( t.lineY ) * verticalModifier,
 					lineY: t.lineX,
 				} ) )
 				: null,
 			client: clientArray
 				? clientArray.map( ( t ) => ( {
 					...t,
-					lineX: centerX + Math.abs( t.lineY ),
+					lineX: centerX + Math.abs( t.lineY ) * verticalModifier,
 					lineY: t.lineX,
 				} ) )
 				: null,

@@ -83,6 +83,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				}
 
 				e.preventDefault();
+				e.stopPropagation(); // Stop Gutenberg from intercepting
 				dragStateRef.current = {
 					isDragging: true,
 					dragType: 'bubble',
@@ -115,6 +116,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				}
 
 				e.preventDefault();
+				e.stopPropagation(); // Stop Gutenberg from intercepting
 				dragStateRef.current = {
 					isDragging: true,
 					dragType: 'label',
@@ -147,6 +149,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				}
 
 				e.preventDefault();
+				e.stopPropagation(); // Stop Gutenberg from intercepting
 				dragStateRef.current = {
 					isDragging: true,
 					dragType: 'indicator',
@@ -265,14 +268,24 @@ export default function Edit( { attributes, setAttributes } ) {
 			};
 		};
 
-		svg.addEventListener( 'mousedown', handleMouseDown );
+		// Use capture phase to intercept before Gutenberg
+		svg.addEventListener( 'mousedown', handleMouseDown, true );
 		document.addEventListener( 'mousemove', handleMouseMove );
 		document.addEventListener( 'mouseup', handleMouseUp );
 
+		// Disable Gutenberg block selection on the container
+		const blockWrapper = container.closest( '.wp-block' );
+		if ( blockWrapper ) {
+			blockWrapper.setAttribute( 'data-block-dragging-disabled', 'true' );
+		}
+
 		return () => {
-			svg.removeEventListener( 'mousedown', handleMouseDown );
+			svg.removeEventListener( 'mousedown', handleMouseDown, true );
 			document.removeEventListener( 'mousemove', handleMouseMove );
 			document.removeEventListener( 'mouseup', handleMouseUp );
+			if ( blockWrapper ) {
+				blockWrapper.removeAttribute( 'data-block-dragging-disabled' );
+			}
 		};
 	}, [ editMode, timelineSteps, previewMode, setAttributes ] );
 
@@ -553,6 +566,20 @@ export default function Edit( { attributes, setAttributes } ) {
 							{ label: 'Verdana', value: 'Verdana, sans-serif' },
 						] }
 						onChange={ ( val ) => updateSetting( 'fontFamily', val ) }
+					/>
+					<RangeControl
+						label="Label Distance (Horizontal Mode)"
+						help="Adjusts height/vertical spacing of labels from timeline"
+						value={ settings?.labelDistanceHorizontal ?? 1.0 }
+						onChange={ ( val ) => updateSetting( 'labelDistanceHorizontal', val ) }
+						min={ 0.1 } max={ 2.0 } step={ 0.05 }
+					/>
+					<RangeControl
+						label="Label Distance (Vertical Mode)"
+						help="Adjusts width/horizontal spacing of labels from timeline"
+						value={ settings?.labelDistanceVertical ?? 1.0 }
+						onChange={ ( val ) => updateSetting( 'labelDistanceVertical', val ) }
+						min={ 0.1 } max={ 2.0 } step={ 0.05 }
 					/>
 					<SelectControl
 						label="Indicator Style"
