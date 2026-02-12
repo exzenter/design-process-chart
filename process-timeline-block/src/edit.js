@@ -538,6 +538,42 @@ export default function Edit({ attributes, setAttributes }) {
             max={5000}
             step={10}
           />
+          <RangeControl
+            label="Crop Top % (Horizontal)"
+            help="Trims whitespace from the top in horizontal mode."
+            value={settings?.cropTop ?? 0}
+            onChange={(val) => updateSetting("cropTop", val)}
+            min={0}
+            max={45}
+            step={1}
+          />
+          <RangeControl
+            label="Crop Bottom % (Horizontal)"
+            help="Trims whitespace from the bottom in horizontal mode."
+            value={settings?.cropBottom ?? 0}
+            onChange={(val) => updateSetting("cropBottom", val)}
+            min={0}
+            max={45}
+            step={1}
+          />
+          <RangeControl
+            label="Crop Left % (Vertical)"
+            help="Trims whitespace from the left in vertical mode."
+            value={settings?.cropLeft ?? 0}
+            onChange={(val) => updateSetting("cropLeft", val)}
+            min={0}
+            max={45}
+            step={1}
+          />
+          <RangeControl
+            label="Crop Right % (Vertical)"
+            help="Trims whitespace from the right in vertical mode."
+            value={settings?.cropRight ?? 0}
+            onChange={(val) => updateSetting("cropRight", val)}
+            min={0}
+            max={45}
+            step={1}
+          />
         </PanelBody>
 
         {/* ===== BUBBLE COLORS ===== */}
@@ -1044,6 +1080,7 @@ export default function Edit({ attributes, setAttributes }) {
             onSave={saveVersion}
             onLoad={loadVersion}
             onDelete={deleteVersion}
+            onOverwrite={saveVersion}
             onImport={importVersions}
             onExport={exportVersions}
           />
@@ -1255,6 +1292,7 @@ function VersionManager({
   onSave,
   onLoad,
   onDelete,
+  onOverwrite,
   onImport,
   onExport,
 }) {
@@ -1296,6 +1334,12 @@ function VersionManager({
                 size="small"
                 style={{ flex: 1 }}>
                 {name}
+              </Button>
+              <Button
+                variant="tertiary"
+                onClick={() => onOverwrite(name)}
+                size="small">
+                ↻
               </Button>
               <Button
                 variant="tertiary"

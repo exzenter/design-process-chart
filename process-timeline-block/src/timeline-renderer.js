@@ -555,4 +555,32 @@ export function renderTimeline(container, steps, phases, settings, viewMode) {
   } else {
     renderHorizontal(container, steps, phases, settings);
   }
+
+  // Apply crop by adjusting the viewBox
+  const svg = container.querySelector("svg");
+  if (svg) {
+    const vb = svg.viewBox.baseVal;
+    const origX = vb.x;
+    const origY = vb.y;
+    const origW = vb.width;
+    const origH = vb.height;
+
+    if (viewMode === "horizontal") {
+      const cropTop = (settings.cropTop || 0) / 100;
+      const cropBottom = (settings.cropBottom || 0) / 100;
+      const newY = origY + origH * cropTop;
+      const newH = origH * (1 - cropTop - cropBottom);
+      if (newH > 0) {
+        svg.setAttribute("viewBox", `${origX} ${newY} ${origW} ${newH}`);
+      }
+    } else {
+      const cropLeft = (settings.cropLeft || 0) / 100;
+      const cropRight = (settings.cropRight || 0) / 100;
+      const newX = origX + origW * cropLeft;
+      const newW = origW * (1 - cropLeft - cropRight);
+      if (newW > 0) {
+        svg.setAttribute("viewBox", `${newX} ${origY} ${newW} ${origH}`);
+      }
+    }
+  }
 }
