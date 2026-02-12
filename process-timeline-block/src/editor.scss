@@ -1,0 +1,100 @@
+/* Process Timeline Block - Editor-only Styles */
+
+.ppt-editor {
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.ppt-preview {
+	padding: 1rem;
+}
+
+.ppt-preview-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid #eee;
+}
+
+.ppt-preview-versions {
+	display: flex;
+	gap: 0.25rem;
+	flex-wrap: wrap;
+}
+
+/* Bubble editor in sidebar */
+.ppt-bubble-editor {
+	margin-top: 12px;
+
+	.components-base-control {
+		margin-bottom: 8px;
+	}
+}
+
+.ppt-task-section {
+	margin-top: 16px;
+	padding: 12px;
+	background: #f8f8f8;
+	border-radius: 4px;
+}
+
+.ppt-task-section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+	font-size: 13px;
+}
+
+.ppt-task-item {
+	padding: 8px;
+	margin-bottom: 8px;
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+
+	.components-base-control {
+		margin-bottom: 4px;
+	}
+
+	.components-base-control__label {
+		font-size: 11px;
+	}
+}
+
+.ppt-task-item-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 6px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+/* Version manager in sidebar */
+.ppt-version-manager {
+	.components-text-control__input {
+		font-size: 13px;
+	}
+}
+
+.ppt-version-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 8px;
+}
+
+.ppt-version-item {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+
+	&.active {
+		font-weight: bold;
+	}
+}

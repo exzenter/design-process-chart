@@ -1,0 +1,18 @@
+{
+  "name": "process-timeline-block",
+  "version": "1.0.0",
+  "description": "Process Timeline Gutenberg Block",
+  "author": "Preface Studios",
+  "license": "GPL-2.0-or-later",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "format": "wp-scripts format",
+    "lint:js": "wp-scripts lint-js"
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.28.6",
+    "@wordpress/scripts": "^28.0.0"
+  }
+}

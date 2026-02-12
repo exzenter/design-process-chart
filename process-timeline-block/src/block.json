@@ -1,0 +1,65 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "preface/process-timeline",
+	"version": "1.0.0",
+	"title": "Process Timeline",
+	"category": "widgets",
+	"icon": "clock",
+	"description": "Interactive process timeline with bubble visualization.",
+	"keywords": [ "timeline", "process", "bubbles", "steps" ],
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"attributes": {
+		"timelineSteps": {
+			"type": "array",
+			"default": []
+		},
+		"phases": {
+			"type": "object",
+			"default": {}
+		},
+		"settings": {
+			"type": "object",
+			"default": {}
+		},
+		"versions": {
+			"type": "object",
+			"default": {}
+		},
+		"activeVersion": {
+			"type": "string",
+			"default": ""
+		},
+		"responsiveBreakpoint": {
+			"type": "number",
+			"default": 768
+		},
+		"mobileLayout": {
+			"type": "string",
+			"default": "vertical"
+		},
+		"desktopLayout": {
+			"type": "string",
+			"default": "horizontal"
+		},
+		"showViewToggle": {
+			"type": "boolean",
+			"default": true
+		},
+		"showVersionButtons": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScript": "file:./view.js"
+}
