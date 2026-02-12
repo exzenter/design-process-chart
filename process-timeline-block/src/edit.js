@@ -845,6 +845,87 @@ export default function Edit({ attributes, setAttributes }) {
           />
         </PanelBody>
 
+        {/* ===== ENTRY ANIMATION ===== */}
+        <PanelBody title="Entry Animation" initialOpen={false}>
+          <ToggleControl
+            label="Enable Entry Animation"
+            help="Bubbles and indicators animate in when scrolled into view."
+            checked={settings?.entryAnimation !== false}
+            onChange={(val) => updateSetting("entryAnimation", val)}
+          />
+          {settings?.entryAnimation !== false && (
+            <>
+              <RangeControl
+                label="Visibility Threshold (%)"
+                help="How much of the block must be visible before animation starts."
+                value={Math.round(
+                  (settings?.entryAnimationThreshold ?? 0.5) * 100,
+                )}
+                onChange={(val) =>
+                  updateSetting("entryAnimationThreshold", val / 100)
+                }
+                min={10}
+                max={100}
+                step={5}
+              />
+              <RangeControl
+                label="Bubble Duration (ms)"
+                value={settings?.entryBubbleDuration ?? 600}
+                onChange={(val) => updateSetting("entryBubbleDuration", val)}
+                min={100}
+                max={2000}
+                step={50}
+              />
+              <RangeControl
+                label="Bubble Stagger (ms)"
+                help="Delay between each bubble appearing."
+                value={settings?.entryBubbleStagger ?? 80}
+                onChange={(val) => updateSetting("entryBubbleStagger", val)}
+                min={0}
+                max={500}
+                step={10}
+              />
+              <RangeControl
+                label="Indicator Duration (ms)"
+                value={settings?.entryIndicatorDuration ?? 400}
+                onChange={(val) => updateSetting("entryIndicatorDuration", val)}
+                min={100}
+                max={2000}
+                step={50}
+              />
+              <RangeControl
+                label="Indicator Stagger (ms)"
+                help="Delay between each indicator/label appearing."
+                value={settings?.entryIndicatorStagger ?? 60}
+                onChange={(val) => updateSetting("entryIndicatorStagger", val)}
+                min={0}
+                max={500}
+                step={10}
+              />
+              <RangeControl
+                label="Indicator Start Delay (ms)"
+                help="Extra delay after all bubbles finish before indicators start."
+                value={settings?.entryIndicatorDelay ?? 200}
+                onChange={(val) => updateSetting("entryIndicatorDelay", val)}
+                min={0}
+                max={1000}
+                step={50}
+              />
+              <SelectControl
+                label="Easing"
+                value={settings?.entryEasing || "ease-out"}
+                options={[
+                  { label: "Ease Out", value: "ease-out" },
+                  { label: "Ease In Out", value: "ease-in-out" },
+                  { label: "Ease Out Back (Bounce)", value: "ease-out-back" },
+                  { label: "Linear", value: "linear" },
+                ]}
+                onChange={(val) => updateSetting("entryEasing", val)}
+              />
+            </>
+          )}
+        </PanelBody>
+
         {/* ===== BUBBLE EDITOR ===== */}
         <PanelBody title="Bubble Editor" initialOpen={false}>
           <SelectControl
