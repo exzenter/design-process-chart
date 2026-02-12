@@ -21,6 +21,20 @@ export default function Edit( { attributes, setAttributes } ) {
 	const containerRef = useRef();
 	const [ previewMode, setPreviewMode ] = useState( 'horizontal' );
 	const [ selectedBubble, setSelectedBubble ] = useState( '' );
+	const [ editMode, setEditMode ] = useState( false );
+	const dragStateRef = useRef( {
+		isDragging: false,
+		dragType: null,
+		bubbleId: null,
+		taskType: null,
+		taskIndex: null,
+		startX: 0,
+		startY: 0,
+		originalX: 0,
+		originalY: 0,
+		originalSize: 0,
+		originalAnchor: 0,
+	} );
 
 	// Initialize defaults on first insert
 	useEffect( () => {
@@ -39,6 +53,228 @@ export default function Edit( { attributes, setAttributes } ) {
 			renderTimeline( containerRef.current, timelineSteps, phases, settings, previewMode );
 		}
 	}, [ timelineSteps, phases, settings, previewMode ] );
+
+	// Setup drag-and-drop when edit mode is enabled
+	useEffect( () => {
+		if ( ! editMode || ! containerRef.current ) {
+			return;
+		}
+
+		const container = containerRef.current;
+		const svg = container.querySelector( 'svg' );
+		if ( ! svg ) {
+			return;
+		}
+
+		const handleMouseDown = ( e ) => {
+			if ( previewMode !== 'horizontal' ) {
+				return; // Only allow drag in horizontal mode
+			}
+
+			const bubble = e.target.closest( '.bubble' );
+			const label = e.target.closest( '.label-text' );
+			const indicator = e.target.closest( '.draggable-indicator' );
+
+			if ( bubble ) {
+				const bubbleId = bubble.dataset.id;
+				const step = ( timelineSteps || [] ).find( ( s ) => s.id === bubbleId );
+				if ( ! step ) {
+					return;
+				}
+
+				e.preventDefault();
+				dragStateRef.current = {
+					isDragging: true,
+					dragType: 'bubble',
+					bubbleId,
+					taskType: null,
+					taskIndex: null,
+					startX: e.clientX,
+					startY: e.clientY,
+					originalX: step.x,
+					originalY: 0,
+					originalSize: step.size,
+					originalAnchor: 0,
+				};
+				setSelectedBubble( bubbleId );
+			} else if ( label ) {
+				const stepId = label.dataset.stepId;
+				const taskType = label.dataset.taskType;
+				const taskIndex = parseInt( label.dataset.taskIndex );
+				const step = ( timelineSteps || [] ).find( ( s ) => s.id === stepId );
+				if ( ! step ) {
+					return;
+				}
+
+				const taskArray = Array.isArray( step[ taskType ] )
+					? step[ taskType ]
+					: [ step[ taskType ] ];
+				const task = taskArray[ taskIndex ];
+				if ( ! task ) {
+					return;
+				}
+
+				e.preventDefault();
+				dragStateRef.current = {
+					isDragging: true,
+					dragType: 'label',
+					bubbleId: stepId,
+					taskType,
+					taskIndex,
+					startX: e.clientX,
+					startY: e.clientY,
+					originalX: task.lineX,
+					originalY: task.lineY,
+					originalSize: 0,
+					originalAnchor: 0,
+				};
+				setSelectedBubble( stepId );
+			} else if ( indicator ) {
+				const stepId = indicator.dataset.stepId;
+				const taskType = indicator.dataset.taskType;
+				const taskIndex = parseInt( indicator.dataset.taskIndex );
+				const step = ( timelineSteps || [] ).find( ( s ) => s.id === stepId );
+				if ( ! step ) {
+					return;
+				}
+
+				const taskArray = Array.isArray( step[ taskType ] )
+					? step[ taskType ]
+					: [ step[ taskType ] ];
+				const task = taskArray[ taskIndex ];
+				if ( ! task ) {
+					return;
+				}
+
+				e.preventDefault();
+				dragStateRef.current = {
+					isDragging: true,
+					dragType: 'indicator',
+					bubbleId: stepId,
+					taskType,
+					taskIndex,
+					startX: e.clientX,
+					startY: e.clientY,
+					originalX: 0,
+					originalY: 0,
+					originalSize: 0,
+					originalAnchor: task.anchor || 0,
+				};
+				setSelectedBubble( stepId );
+			}
+		};
+
+		const handleMouseMove = ( e ) => {
+			if ( ! dragStateRef.current.isDragging ) {
+				return;
+			}
+
+			const deltaX = e.clientX - dragStateRef.current.startX;
+			const deltaY = e.clientY - dragStateRef.current.startY;
+
+			const svgRect = svg.getBoundingClientRect();
+			const viewBox = svg.viewBox.baseVal;
+			const scaleX = viewBox.width / svgRect.width;
+			const scaleY = viewBox.height / svgRect.height;
+
+			if ( dragStateRef.current.dragType === 'bubble' ) {
+				const newX = dragStateRef.current.originalX + deltaX * scaleX;
+				const sizeChange = -( deltaY / 2 );
+				let newSize = dragStateRef.current.originalSize + sizeChange;
+				newSize = Math.max( 1, Math.min( 100, newSize ) );
+
+				const newSteps = ( timelineSteps || [] ).map( ( s ) => {
+					if ( s.id === dragStateRef.current.bubbleId ) {
+						return {
+							...s,
+							x: Math.round( newX * 10 ) / 10,
+							size: Math.round( newSize * 10 ) / 10,
+						};
+					}
+					return s;
+				} );
+				setAttributes( { timelineSteps: newSteps } );
+			} else if ( dragStateRef.current.dragType === 'label' ) {
+				const newLineX = dragStateRef.current.originalX + deltaX * scaleX;
+				const newLineY = dragStateRef.current.originalY + deltaY * scaleY;
+
+				const newSteps = ( timelineSteps || [] ).map( ( s ) => {
+					if ( s.id === dragStateRef.current.bubbleId ) {
+						const taskArray = Array.isArray( s[ dragStateRef.current.taskType ] )
+							? s[ dragStateRef.current.taskType ]
+							: [ s[ dragStateRef.current.taskType ] ];
+						const updatedTasks = taskArray.map( ( task, idx ) => {
+							if ( idx === dragStateRef.current.taskIndex ) {
+								return {
+									...task,
+									lineX: Math.round( newLineX * 10 ) / 10,
+									lineY: Math.round( newLineY * 10 ) / 10,
+								};
+							}
+							return task;
+						} );
+						return {
+							...s,
+							[ dragStateRef.current.taskType ]: updatedTasks.length === 1 ? updatedTasks[ 0 ] : updatedTasks,
+						};
+					}
+					return s;
+				} );
+				setAttributes( { timelineSteps: newSteps } );
+			} else if ( dragStateRef.current.dragType === 'indicator' ) {
+				const anchorChange = deltaX / 50;
+				let newAnchor = dragStateRef.current.originalAnchor + anchorChange;
+				newAnchor = Math.max( -1, Math.min( 1, newAnchor ) );
+				newAnchor = Math.round( newAnchor * 100 ) / 100;
+
+				const newSteps = ( timelineSteps || [] ).map( ( s ) => {
+					if ( s.id === dragStateRef.current.bubbleId ) {
+						const taskArray = Array.isArray( s[ dragStateRef.current.taskType ] )
+							? s[ dragStateRef.current.taskType ]
+							: [ s[ dragStateRef.current.taskType ] ];
+						const updatedTasks = taskArray.map( ( task, idx ) => {
+							if ( idx === dragStateRef.current.taskIndex ) {
+								return { ...task, anchor: newAnchor };
+							}
+							return task;
+						} );
+						return {
+							...s,
+							[ dragStateRef.current.taskType ]: updatedTasks.length === 1 ? updatedTasks[ 0 ] : updatedTasks,
+						};
+					}
+					return s;
+				} );
+				setAttributes( { timelineSteps: newSteps } );
+			}
+		};
+
+		const handleMouseUp = () => {
+			dragStateRef.current = {
+				isDragging: false,
+				dragType: null,
+				bubbleId: null,
+				taskType: null,
+				taskIndex: null,
+				startX: 0,
+				startY: 0,
+				originalX: 0,
+				originalY: 0,
+				originalSize: 0,
+				originalAnchor: 0,
+			};
+		};
+
+		svg.addEventListener( 'mousedown', handleMouseDown );
+		document.addEventListener( 'mousemove', handleMouseMove );
+		document.addEventListener( 'mouseup', handleMouseUp );
+
+		return () => {
+			svg.removeEventListener( 'mousedown', handleMouseDown );
+			document.removeEventListener( 'mousemove', handleMouseMove );
+			document.removeEventListener( 'mouseup', handleMouseUp );
+		};
+	}, [ editMode, timelineSteps, previewMode, setAttributes ] );
 
 	// Helpers
 	const updateSetting = ( key, value ) => {
@@ -545,6 +781,13 @@ export default function Edit( { attributes, setAttributes } ) {
 						</Button>
 					</ButtonGroup>
 
+					<ToggleControl
+						label="Edit Mode (Drag & Drop)"
+						checked={ editMode }
+						onChange={ setEditMode }
+						help={ editMode ? 'Drag bubbles to move/resize. Drag labels to position. Drag indicators to adjust anchor.' : 'Enable to interactively edit bubbles, labels, and indicators.' }
+					/>
+
 					{ Object.keys( versions || {} ).length > 0 && (
 						<div className="ppt-preview-versions">
 							{ Object.keys( versions ).map( ( name ) => (
@@ -561,7 +804,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					) }
 				</div>
 				<div
-					className={ `ppt-timeline-wrapper ppt-timeline-wrapper--${ previewMode }` }
+					className={ `ppt-timeline-wrapper ppt-timeline-wrapper--${ previewMode }${ editMode ? ' edit-mode' : '' }` }
 					ref={ containerRef }
 				/>
 			</div>

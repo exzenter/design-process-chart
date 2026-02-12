@@ -200,7 +200,7 @@ function renderConnection( svg, bx, by, task, radius, isVertical, stepId, owner,
 	}
 
 	const label = createText( labelX, labelY, task.label, fontSize );
-	label.classList.add( 'label-text' );
+	label.classList.add( 'label-text', 'draggable-label' );
 	label.setAttribute( 'fill', settings.textColor );
 	label.setAttribute( 'font-weight', fontWeight );
 	label.dataset.stepId = stepId;
