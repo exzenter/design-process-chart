@@ -1105,6 +1105,90 @@ class ProcessTimeline {
     }
   }
 
+  // Capture numeric SVG attributes from all elements keyed by step id
+  captureSnapshot(svg) {
+    const snap = {};
+    if (!svg) return snap;
+
+    // Bubbles
+    svg.querySelectorAll(".bubble").forEach((el) => {
+      const id = el.dataset.id;
+      snap["bubble_" + id] = {
+        el,
+        cx: +el.getAttribute("cx"),
+        cy: +el.getAttribute("cy"),
+        r: +el.getAttribute("r"),
+      };
+    });
+
+    // Connection lines
+    svg.querySelectorAll(".connection-line").forEach((el) => {
+      const key =
+        "line_" +
+        el.dataset.stepId +
+        "_" +
+        el.dataset.taskType +
+        "_" +
+        el.dataset.taskIndex;
+      snap[key] = {
+        el,
+        x1: +el.getAttribute("x1"),
+        y1: +el.getAttribute("y1"),
+        x2: +el.getAttribute("x2"),
+        y2: +el.getAttribute("y2"),
+      };
+    });
+
+    // Indicators (g elements containing shapes)
+    svg.querySelectorAll(".draggable-indicator").forEach((el) => {
+      const key =
+        "ind_" +
+        el.dataset.stepId +
+        "_" +
+        el.dataset.taskType +
+        "_" +
+        el.dataset.taskIndex;
+      // Get position from first child shape
+      const shape = el.querySelector("circle, rect, polygon");
+      if (shape) {
+        let cx, cy;
+        if (shape.tagName === "circle") {
+          cx = +shape.getAttribute("cx");
+          cy = +shape.getAttribute("cy");
+        } else if (shape.tagName === "rect") {
+          cx = +shape.getAttribute("x") + +shape.getAttribute("width") / 2;
+          cy = +shape.getAttribute("y") + +shape.getAttribute("height") / 2;
+        } else if (shape.tagName === "polygon") {
+          // Parse center from points
+          const pts = shape
+            .getAttribute("points")
+            .split(" ")
+            .map((p) => p.split(",").map(Number));
+          cx = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+          cy = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+        }
+        snap[key] = { el, cx, cy };
+      }
+    });
+
+    // Labels
+    svg.querySelectorAll(".label-text").forEach((el) => {
+      const key =
+        "label_" +
+        el.dataset.stepId +
+        "_" +
+        el.dataset.taskType +
+        "_" +
+        el.dataset.taskIndex;
+      snap[key] = { el, x: +el.getAttribute("x"), y: +el.getAttribute("y") };
+    });
+
+    return snap;
+  }
+
+  // Add data attributes to connection-line and indicator for keying
+  // (We need taskType and taskIndex on lines/indicators — check if renderConnection sets them)
+
   renderAnimated() {
     if (this.isAnimating) return;
     this.isAnimating = true;
@@ -1116,99 +1200,286 @@ class ProcessTimeline {
     }
 
     const oldSvg = container.querySelector("svg");
+
+    // Capture old positions
+    const oldSnap = this.captureSnapshot(oldSvg);
     const prevIds = new Set(this.previousStepMap.keys());
     const newIds = new Set(this.timelineSteps.map((s) => s.id));
-
-    // IDs that are removed
     const removedIds = [...prevIds].filter((id) => !newIds.has(id));
-    // IDs that are added
     const addedIds = [...newIds].filter((id) => !prevIds.has(id));
-    // IDs that persist (may move/resize)
-    const persistIds = [...newIds].filter((id) => prevIds.has(id));
 
-    // Animate out removed bubbles
-    if (oldSvg && removedIds.length > 0) {
-      removedIds.forEach((id) => {
-        const bubble = oldSvg.querySelector(`.bubble[data-id="${id}"]`);
-        if (bubble) bubble.classList.add("bubble-exit");
-        // Also fade out related connections/labels
-        oldSvg
-          .querySelectorAll(`.connection-line[data-step-id="${id}"]`)
-          .forEach((el) => el.classList.add("connection-exit"));
-        oldSvg
-          .querySelectorAll(`.label-text[data-step-id="${id}"]`)
-          .forEach((el) => el.classList.add("connection-exit"));
-        oldSvg
-          .querySelectorAll(`.draggable-indicator[data-step-id="${id}"]`)
-          .forEach((el) => el.classList.add("connection-exit"));
-      });
+    // Render new state immediately
+    this.render();
+
+    const newSvg = container.querySelector("svg");
+    if (!newSvg) {
+      this.isAnimating = false;
+      return;
     }
 
-    // Wait for exit animations, then render new state
-    const exitDuration = removedIds.length > 0 ? 500 : 0;
+    // Tag lines/indicators with data attributes for keying (they may not have taskType/taskIndex on line elements)
+    // Actually renderConnection already sets dataset.stepId on lines. Let me add taskType/taskIndex there too.
+    // For now, capture new snapshot
+    const newSnap = this.captureSnapshot(newSvg);
 
-    setTimeout(() => {
-      // Full render of new state
-      this.render();
+    const duration = 600; // ms
+    const easeInOut = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 
-      const newSvg = container.querySelector("svg");
-      if (!newSvg) {
-        this.isAnimating = false;
-        return;
+    // Build tween list
+    const tweens = [];
+
+    // --- Bubbles ---
+    for (const key of Object.keys(newSnap)) {
+      if (!key.startsWith("bubble_")) continue;
+      const nw = newSnap[key];
+      const ol = oldSnap[key];
+      if (ol) {
+        // Persist: tween from old to new
+        tweens.push({
+          type: "bubble",
+          el: nw.el,
+          from: { cx: ol.cx, cy: ol.cy, r: ol.r },
+          to: { cx: nw.cx, cy: nw.cy, r: nw.r },
+        });
+        // Set to old position initially
+        nw.el.setAttribute("cx", ol.cx);
+        nw.el.setAttribute("cy", ol.cy);
+        nw.el.setAttribute("r", ol.r);
+      } else {
+        // New bubble: scale in
+        tweens.push({
+          type: "bubble-enter",
+          el: nw.el,
+          to: { cx: nw.cx, cy: nw.cy, r: nw.r },
+        });
+        nw.el.setAttribute("r", 0);
+        nw.el.style.opacity = "0";
+      }
+    }
+
+    // --- Lines ---
+    for (const key of Object.keys(newSnap)) {
+      if (!key.startsWith("line_")) continue;
+      const nw = newSnap[key];
+      const ol = oldSnap[key];
+      if (ol) {
+        tweens.push({
+          type: "line",
+          el: nw.el,
+          from: { x1: ol.x1, y1: ol.y1, x2: ol.x2, y2: ol.y2 },
+          to: { x1: nw.x1, y1: nw.y1, x2: nw.x2, y2: nw.y2 },
+        });
+        nw.el.setAttribute("x1", ol.x1);
+        nw.el.setAttribute("y1", ol.y1);
+        nw.el.setAttribute("x2", ol.x2);
+        nw.el.setAttribute("y2", ol.y2);
+      } else {
+        tweens.push({ type: "fade-in", el: nw.el });
+        nw.el.style.opacity = "0";
+      }
+    }
+
+    // --- Indicators ---
+    for (const key of Object.keys(newSnap)) {
+      if (!key.startsWith("ind_")) continue;
+      const nw = newSnap[key];
+      const ol = oldSnap[key];
+      if (ol && nw.cx != null && ol.cx != null) {
+        const dx = nw.cx - ol.cx;
+        const dy = nw.cy - ol.cy;
+        if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+          tweens.push({
+            type: "indicator",
+            el: nw.el,
+            from: { dx: -dx, dy: -dy },
+            to: { dx: 0, dy: 0 },
+          });
+          nw.el.setAttribute("transform", `translate(${-dx}, ${-dy})`);
+        }
+      } else {
+        tweens.push({ type: "fade-in", el: nw.el });
+        nw.el.style.opacity = "0";
+      }
+    }
+
+    // --- Labels ---
+    for (const key of Object.keys(newSnap)) {
+      if (!key.startsWith("label_")) continue;
+      const nw = newSnap[key];
+      const ol = oldSnap[key];
+      if (ol) {
+        const dx = nw.x - ol.x;
+        const dy = nw.y - ol.y;
+        if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+          // We can't just set x/y because tspans also have x. Use a wrapping transform.
+          tweens.push({
+            type: "label",
+            el: nw.el,
+            from: { dx: -dx, dy: -dy },
+            to: { dx: 0, dy: 0 },
+            existingTransform: nw.el.getAttribute("transform") || "",
+          });
+        }
+      } else {
+        tweens.push({ type: "fade-in", el: nw.el });
+        nw.el.style.opacity = "0";
+      }
+    }
+
+    // --- Removed elements: add exit class on old SVG elements that we re-add temporarily ---
+    // Actually old SVG is gone. Instead, for removed bubbles we create ghost copies.
+    removedIds.forEach((id) => {
+      const oldBubble = oldSnap["bubble_" + id];
+      if (oldBubble) {
+        // Create a ghost circle in the new SVG
+        const ghost = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle",
+        );
+        ghost.setAttribute("cx", oldBubble.cx);
+        ghost.setAttribute("cy", oldBubble.cy);
+        ghost.setAttribute("r", oldBubble.r);
+        ghost.setAttribute("fill", oldBubble.el.getAttribute("fill"));
+        ghost.style.opacity = String(
+          getComputedStyle(document.documentElement)
+            .getPropertyValue("--bubble-opacity")
+            .trim() || "0.7",
+        );
+        ghost.style.mixBlendMode = this.settings.bubbleBlendMode;
+        newSvg.appendChild(ghost);
+        tweens.push({
+          type: "bubble-exit",
+          el: ghost,
+          from: { r: oldBubble.r },
+          cx: oldBubble.cx,
+          cy: oldBubble.cy,
+        });
       }
 
-      // Animate persisting bubbles from old position to new
-      persistIds.forEach((id) => {
-        const oldStep = this.previousStepMap.get(id);
-        const newStep = this.timelineSteps.find((s) => s.id === id);
-        if (!oldStep || !newStep) return;
-
-        const bubble = newSvg.querySelector(`.bubble[data-id="${id}"]`);
-        if (!bubble) return;
-
-        const oldRadius = this.getBubbleSize(oldStep.size) / 2;
-        const newRadius = this.getBubbleSize(newStep.size) / 2;
-        const centerY = 10; // horizontal centerLine
-
-        // If position or size changed, animate
-        if (oldStep.x !== newStep.x || oldStep.size !== newStep.size) {
-          // Set to old position first
-          bubble.setAttribute("cx", oldStep.x);
-          bubble.setAttribute("cy", centerY);
-          bubble.setAttribute("r", oldRadius);
-
-          // Force reflow
-          bubble.getBoundingClientRect();
-
-          // Animate to new position
-          bubble.style.transition = "cx 0.6s ease, cy 0.6s ease, r 0.6s ease";
-          bubble.setAttribute("cx", newStep.x);
-          bubble.setAttribute("cy", centerY);
-          bubble.setAttribute("r", newRadius);
+      // Ghost lines
+      for (const key of Object.keys(oldSnap)) {
+        if (key.startsWith("line_" + id + "_")) {
+          const ol = oldSnap[key];
+          const ghostLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line",
+          );
+          ghostLine.setAttribute("x1", ol.x1);
+          ghostLine.setAttribute("y1", ol.y1);
+          ghostLine.setAttribute("x2", ol.x2);
+          ghostLine.setAttribute("y2", ol.y2);
+          ghostLine.setAttribute("stroke", ol.el.getAttribute("stroke"));
+          ghostLine.setAttribute(
+            "stroke-width",
+            ol.el.getAttribute("stroke-width"),
+          );
+          if (ol.el.getAttribute("stroke-dasharray"))
+            ghostLine.setAttribute(
+              "stroke-dasharray",
+              ol.el.getAttribute("stroke-dasharray"),
+            );
+          newSvg.appendChild(ghostLine);
+          tweens.push({ type: "fade-out", el: ghostLine });
         }
-      });
+        if (
+          key.startsWith("ind_" + id + "_") ||
+          key.startsWith("label_" + id + "_")
+        ) {
+          // For indicators and labels, just skip ghost — they fade with the line
+        }
+      }
+    });
 
-      // Animate in new bubbles
-      addedIds.forEach((id) => {
-        const bubble = newSvg.querySelector(`.bubble[data-id="${id}"]`);
-        if (bubble) bubble.classList.add("bubble-enter");
-        newSvg
-          .querySelectorAll(`.connection-line[data-step-id="${id}"]`)
-          .forEach((el) => el.classList.add("connection-enter"));
-        newSvg
-          .querySelectorAll(`.label-text[data-step-id="${id}"]`)
-          .forEach((el) => el.classList.add("connection-enter"));
-        newSvg
-          .querySelectorAll(`.draggable-indicator[data-step-id="${id}"]`)
-          .forEach((el) => el.classList.add("connection-enter"));
-      });
+    // Run animation loop
+    const startTime = performance.now();
 
-      // Clean up animation state
-      setTimeout(() => {
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const rawT = Math.min(elapsed / duration, 1);
+      const t = easeInOut(rawT);
+
+      for (const tw of tweens) {
+        switch (tw.type) {
+          case "bubble": {
+            const cx = tw.from.cx + (tw.to.cx - tw.from.cx) * t;
+            const cy = tw.from.cy + (tw.to.cy - tw.from.cy) * t;
+            const r = tw.from.r + (tw.to.r - tw.from.r) * t;
+            tw.el.setAttribute("cx", cx);
+            tw.el.setAttribute("cy", cy);
+            tw.el.setAttribute("r", r);
+            break;
+          }
+          case "bubble-enter": {
+            const r = tw.to.r * t;
+            tw.el.setAttribute("r", r);
+            tw.el.style.opacity = String(t * 0.7);
+            break;
+          }
+          case "bubble-exit": {
+            const r = tw.from.r * (1 - t);
+            tw.el.setAttribute("r", Math.max(0, r));
+            tw.el.style.opacity = String((1 - t) * 0.7);
+            break;
+          }
+          case "line": {
+            tw.el.setAttribute("x1", tw.from.x1 + (tw.to.x1 - tw.from.x1) * t);
+            tw.el.setAttribute("y1", tw.from.y1 + (tw.to.y1 - tw.from.y1) * t);
+            tw.el.setAttribute("x2", tw.from.x2 + (tw.to.x2 - tw.from.x2) * t);
+            tw.el.setAttribute("y2", tw.from.y2 + (tw.to.y2 - tw.from.y2) * t);
+            break;
+          }
+          case "indicator": {
+            const dx = tw.from.dx + (tw.to.dx - tw.from.dx) * t;
+            const dy = tw.from.dy + (tw.to.dy - tw.from.dy) * t;
+            tw.el.setAttribute("transform", `translate(${dx}, ${dy})`);
+            break;
+          }
+          case "label": {
+            const dx = tw.from.dx + (tw.to.dx - tw.from.dx) * t;
+            const dy = tw.from.dy + (tw.to.dy - tw.from.dy) * t;
+            // Compose with existing transform (e.g. vertical centering offset)
+            const base = tw.existingTransform;
+            tw.el.setAttribute("transform", `translate(${dx}, ${dy}) ${base}`);
+            break;
+          }
+          case "fade-in": {
+            tw.el.style.opacity = String(t);
+            break;
+          }
+          case "fade-out": {
+            tw.el.style.opacity = String(1 - t);
+            break;
+          }
+        }
+      }
+
+      if (rawT < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Clean up ghost elements and reset transforms
+        for (const tw of tweens) {
+          if (tw.type === "bubble-exit" || tw.type === "fade-out") {
+            tw.el.remove();
+          }
+          if (tw.type === "indicator") {
+            tw.el.removeAttribute("transform");
+          }
+          if (tw.type === "label") {
+            tw.el.setAttribute("transform", tw.existingTransform);
+          }
+          if (tw.type === "bubble-enter") {
+            tw.el.style.opacity = "";
+          }
+          if (tw.type === "fade-in") {
+            tw.el.style.opacity = "";
+          }
+        }
         this.isAnimating = false;
         this.previousStepMap.clear();
-      }, 700);
-    }, exitDuration);
+      }
+    };
+
+    requestAnimationFrame(animate);
   }
 
   exportVersions() {
@@ -1887,6 +2158,8 @@ class ProcessTimeline {
     line.classList.add("connection-line");
     line.setAttribute("stroke", this.settings.connectionColor);
     line.dataset.stepId = stepId;
+    line.dataset.taskType = owner;
+    line.dataset.taskIndex = taskIndex;
     svg.appendChild(line);
 
     // Indicator Icon at start point (where line touches bubble)

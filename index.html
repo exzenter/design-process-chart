@@ -11,167 +11,22 @@
     <div class="container">
       <!-- Header -->
       <header class="header">
-        <div class="view-toggle">
-          <button id="view-horizontal" class="active">Horizontal</button>
-          <button id="view-vertical">Vertical</button>
+        <button id="editor-toggle" class="editor-btn">✏️ Edit Bubbles</button>
+
+        <div class="header-center">
+          <div class="view-toggle">
+            <button id="view-horizontal" class="active">Horizontal</button>
+            <button id="view-vertical">Vertical</button>
+          </div>
+          <div id="version-buttons" class="version-buttons"></div>
         </div>
 
         <button id="settings-toggle" class="settings-btn">⚙️ Settings</button>
-        <button id="editor-toggle" class="editor-btn">✏️ Edit Bubbles</button>
       </header>
-
-      <!-- Version Bar -->
-      <div class="version-bar">
-        <div class="version-bar-left">
-          <span class="version-label">Versions:</span>
-          <div id="version-buttons" class="version-buttons"></div>
-        </div>
-        <div class="version-bar-right">
-          <input
-            type="text"
-            id="version-name-input"
-            class="version-name-input"
-            placeholder="Version name..." />
-          <button id="save-version-btn" class="version-action-btn save">
-            💾 Save
-          </button>
-          <button id="delete-version-btn" class="version-action-btn delete">
-            🗑️ Delete
-          </button>
-          <button id="import-version-btn" class="version-action-btn import">
-            📥 Import
-          </button>
-          <button id="export-version-btn" class="version-action-btn export">
-            📤 Export
-          </button>
-          <input
-            type="file"
-            id="import-version-file"
-            accept=".json"
-            style="display: none" />
-        </div>
-      </div>
 
       <!-- Timeline -->
       <div class="timeline-wrapper horizontal">
         <div id="timeline-svg"></div>
-      </div>
-
-      <!-- Legend -->
-      <div class="legend">
-        <div class="legend-content">
-          <!-- Phases -->
-          <div class="legend-section">
-            <h3>Phase</h3>
-            <div class="phase-list">
-              <div class="phase-item" data-phase="contact">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-contact)"></div>
-                <span class="phase-name">Contact</span>
-              </div>
-              <div class="phase-item" data-phase="discovery">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-discovery)"></div>
-                <span class="phase-name">Discovery</span>
-              </div>
-              <div class="phase-item" data-phase="content">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-content)"></div>
-                <span class="phase-name">Content</span>
-              </div>
-              <div class="phase-item" data-phase="uxue">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-uxue)"></div>
-                <span class="phase-name">UX/UE</span>
-              </div>
-              <div class="phase-item" data-phase="coding">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-coding)"></div>
-                <span class="phase-name">Coding</span>
-              </div>
-              <div class="phase-item" data-phase="launch">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-launch)"></div>
-                <span class="phase-name">Launch</span>
-              </div>
-              <div class="phase-item" data-phase="support">
-                <div
-                  class="phase-color"
-                  style="background-color: var(--color-support)"></div>
-                <span class="phase-name">Support</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Involvement -->
-          <div class="legend-section">
-            <h3>Involvement</h3>
-            <div class="importance-list">
-              <div class="importance-item">
-                <div class="importance-visual">
-                  <div class="importance-circle active"></div>
-                </div>
-                <div class="importance-label">Less</div>
-              </div>
-              <div class="importance-item">
-                <div class="importance-visual">
-                  <div class="importance-circle active"></div>
-                  <div class="importance-circle active"></div>
-                </div>
-                <div class="importance-label">Average</div>
-              </div>
-              <div class="importance-item">
-                <div class="importance-visual">
-                  <div class="importance-circle active"></div>
-                  <div class="importance-circle active"></div>
-                  <div class="importance-circle active"></div>
-                </div>
-                <div class="importance-label">
-                  <span class="importance-value">Greater</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Importance (right side) -->
-          <div class="legend-section">
-            <h3>Importance</h3>
-            <div class="importance-list">
-              <div class="importance-item">
-                <div class="importance-visual">
-                  <div class="importance-circle active"></div>
-                </div>
-                <div class="importance-label">Less</div>
-              </div>
-              <div class="importance-item">
-                <div class="importance-visual">
-                  <div class="importance-circle"></div>
-                  <div class="importance-circle active"></div>
-                  <div class="importance-circle"></div>
-                </div>
-                <div class="importance-label">Average</div>
-              </div>
-              <div class="importance-item">
-                <div class="importance-visual">
-                  <div class="importance-circle"></div>
-                  <div class="importance-circle"></div>
-                  <div class="importance-circle active"></div>
-                </div>
-                <div class="importance-label">
-                  <span class="importance-value">Greater</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="copyright">© Preface Studios Limited 2020</div>
       </div>
     </div>
 
@@ -683,6 +538,39 @@
           <div id="export-output" class="export-output" style="display: none">
             <textarea id="export-textarea" readonly rows="10"></textarea>
             <button id="copy-export" class="copy-btn">Copy to Clipboard</button>
+          </div>
+        </div>
+
+        <!-- Version Management -->
+        <div class="editor-section">
+          <h3>Versions</h3>
+          <div class="version-controls">
+            <div class="setting-item">
+              <input
+                type="text"
+                id="version-name-input"
+                class="version-name-input"
+                placeholder="Version name..." />
+              <button id="save-version-btn" class="version-action-btn save">
+                💾 Save
+              </button>
+            </div>
+            <div class="version-actions">
+              <button id="delete-version-btn" class="version-action-btn delete">
+                🗑️ Delete
+              </button>
+              <button id="import-version-btn" class="version-action-btn import">
+                📥 Import
+              </button>
+              <button id="export-version-btn" class="version-action-btn export">
+                📤 Export
+              </button>
+              <input
+                type="file"
+                id="import-version-file"
+                accept=".json"
+                style="display: none" />
+            </div>
           </div>
         </div>
       </div>
