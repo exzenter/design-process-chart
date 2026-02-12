@@ -103,33 +103,39 @@
 .ppt-timeline-wrapper {
   position: relative;
 
-  /* Draggable cursor styles */
+  /* Click-to-pick cursor styles */
   &.edit-mode {
-    user-select: none; /* Prevent text selection while dragging */
+    user-select: none;
 
     svg {
-      pointer-events: all; /* Ensure SVG captures all pointer events */
+      pointer-events: all;
     }
 
     .bubble {
-      cursor: move;
+      cursor: pointer;
     }
 
     .draggable-label {
-      cursor: move;
+      cursor: pointer;
       pointer-events: all;
     }
 
     .draggable-indicator {
-      cursor: ew-resize; /* horizontal resize for anchor adjustment */
+      cursor: pointer;
       pointer-events: all;
     }
-  }
-}
 
-/* Prevent Gutenberg block movers when in edit mode */
-.ppt-timeline-wrapper.edit-mode svg {
-  touch-action: none;
+    /* When carrying an element, show crosshair on the whole wrapper */
+    &.carrying {
+      cursor: crosshair;
+
+      .bubble,
+      .draggable-label,
+      .draggable-indicator {
+        cursor: crosshair;
+      }
+    }
+  }
 }
 
 /* Edit mode toggle control */

@@ -48,6 +48,9 @@ export default function Edit({ attributes, setAttributes }) {
   const [previewMode, setPreviewMode] = useState("horizontal");
   const [selectedBubble, setSelectedBubble] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const [isCarrying, setIsCarrying] = useState(false);
+  const stepsRef = useRef(timelineSteps);
+  stepsRef.current = timelineSteps;
   const dragStateRef = useRef({
     isDragging: false,
     dragType: null,
@@ -92,52 +95,62 @@ export default function Edit({ attributes, setAttributes }) {
     }
   }, [timelineSteps, phases, settings, previewMode]);
 
-  // Setup drag-and-drop when edit mode is enabled
+  // Click-to-pick, move, click-to-drop editing.
+  // First click on a bubble/label/indicator picks it up.
+  // Mouse movement updates position. Second click drops it.
+  // Escape key cancels. No drag events needed — no Gutenberg conflict.
+  // Uses stepsRef so this effect only re-runs on editMode/previewMode change,
+  // NOT on every timelineSteps update (which would kill the carrying state).
   useEffect(() => {
     if (!editMode || !containerRef.current) {
       return;
     }
 
     const container = containerRef.current;
-    const svg = container.querySelector("svg");
-    if (!svg) {
-      return;
-    }
+    const getSvg = () => container.querySelector("svg");
 
-    // Helper: check if event target is a draggable timeline element
-    const getDraggableTarget = (e) => {
-      const bubble = e.target.closest(".bubble");
-      const label = e.target.closest(".label-text");
-      const indicator = e.target.closest(".draggable-indicator");
-      return bubble || label || indicator;
-    };
-
-    let activePointerId = null;
-
-    const handlePointerDown = (e) => {
+    const handleClick = (e) => {
+      const svg = getSvg();
+      if (!svg || !container.contains(e.target)) {
+        return;
+      }
       if (previewMode !== "horizontal") {
         return;
       }
-      if (!getDraggableTarget(e)) {
+
+      // If already carrying something, drop it
+      if (dragStateRef.current.isDragging) {
+        dragStateRef.current = {
+          isDragging: false,
+          dragType: null,
+          bubbleId: null,
+          taskType: null,
+          taskIndex: null,
+          startX: 0,
+          startY: 0,
+          originalX: 0,
+          originalY: 0,
+          originalSize: 0,
+          originalAnchor: 0,
+        };
+        setIsCarrying(false);
         return;
       }
 
+      // Otherwise, try to pick something up
       const bubble = e.target.closest(".bubble");
       const label = e.target.closest(".label-text");
       const indicator = e.target.closest(".draggable-indicator");
 
-      // Prevent Gutenberg from seeing this event at all
-      e.preventDefault();
-      e.stopPropagation();
+      if (!bubble && !label && !indicator) {
+        return;
+      }
 
-      // Capture pointer to this element so pointermove/pointerup
-      // fire on the SVG even if the cursor leaves it
-      svg.setPointerCapture(e.pointerId);
-      activePointerId = e.pointerId;
+      const steps = stepsRef.current || [];
 
       if (bubble) {
         const bubbleId = bubble.dataset.id;
-        const step = (timelineSteps || []).find((s) => s.id === bubbleId);
+        const step = steps.find((s) => s.id === bubbleId);
         if (!step) {
           return;
         }
@@ -155,11 +168,12 @@ export default function Edit({ attributes, setAttributes }) {
           originalAnchor: 0,
         };
         setSelectedBubble(bubbleId);
+        setIsCarrying(true);
       } else if (label) {
         const stepId = label.dataset.stepId;
         const taskType = label.dataset.taskType;
         const taskIndex = parseInt(label.dataset.taskIndex);
-        const step = (timelineSteps || []).find((s) => s.id === stepId);
+        const step = steps.find((s) => s.id === stepId);
         if (!step) {
           return;
         }
@@ -184,11 +198,12 @@ export default function Edit({ attributes, setAttributes }) {
           originalAnchor: 0,
         };
         setSelectedBubble(stepId);
+        setIsCarrying(true);
       } else if (indicator) {
         const stepId = indicator.dataset.stepId;
         const taskType = indicator.dataset.taskType;
         const taskIndex = parseInt(indicator.dataset.taskIndex);
-        const step = (timelineSteps || []).find((s) => s.id === stepId);
+        const step = steps.find((s) => s.id === stepId);
         if (!step) {
           return;
         }
@@ -213,16 +228,19 @@ export default function Edit({ attributes, setAttributes }) {
           originalAnchor: task.anchor || 0,
         };
         setSelectedBubble(stepId);
+        setIsCarrying(true);
       }
     };
 
-    const handlePointerMove = (e) => {
+    const handleMouseMove = (e) => {
       if (!dragStateRef.current.isDragging) {
         return;
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      const svg = getSvg();
+      if (!svg) {
+        return;
+      }
 
       const deltaX = e.clientX - dragStateRef.current.startX;
       const deltaY = e.clientY - dragStateRef.current.startY;
@@ -232,13 +250,15 @@ export default function Edit({ attributes, setAttributes }) {
       const scaleX = viewBox.width / svgRect.width;
       const scaleY = viewBox.height / svgRect.height;
 
+      const steps = stepsRef.current || [];
+
       if (dragStateRef.current.dragType === "bubble") {
         const newX = dragStateRef.current.originalX + deltaX * scaleX;
         const sizeChange = -(deltaY / 2);
         let newSize = dragStateRef.current.originalSize + sizeChange;
         newSize = Math.max(1, Math.min(100, newSize));
 
-        const newSteps = (timelineSteps || []).map((s) => {
+        const newSteps = steps.map((s) => {
           if (s.id === dragStateRef.current.bubbleId) {
             return {
               ...s,
@@ -253,7 +273,7 @@ export default function Edit({ attributes, setAttributes }) {
         const newLineX = dragStateRef.current.originalX + deltaX * scaleX;
         const newLineY = dragStateRef.current.originalY + deltaY * scaleY;
 
-        const newSteps = (timelineSteps || []).map((s) => {
+        const newSteps = steps.map((s) => {
           if (s.id === dragStateRef.current.bubbleId) {
             const taskArray = Array.isArray(s[dragStateRef.current.taskType])
               ? s[dragStateRef.current.taskType]
@@ -283,7 +303,7 @@ export default function Edit({ attributes, setAttributes }) {
         newAnchor = Math.max(-1, Math.min(1, newAnchor));
         newAnchor = Math.round(newAnchor * 100) / 100;
 
-        const newSteps = (timelineSteps || []).map((s) => {
+        const newSteps = steps.map((s) => {
           if (s.id === dragStateRef.current.bubbleId) {
             const taskArray = Array.isArray(s[dragStateRef.current.taskType])
               ? s[dragStateRef.current.taskType]
@@ -306,52 +326,37 @@ export default function Edit({ attributes, setAttributes }) {
       }
     };
 
-    const handlePointerUp = (e) => {
-      if (!dragStateRef.current.isDragging) {
-        return;
-      }
-      dragStateRef.current = {
-        isDragging: false,
-        dragType: null,
-        bubbleId: null,
-        taskType: null,
-        taskIndex: null,
-        startX: 0,
-        startY: 0,
-        originalX: 0,
-        originalY: 0,
-        originalSize: 0,
-        originalAnchor: 0,
-      };
-      if (svg.hasPointerCapture(e.pointerId)) {
-        svg.releasePointerCapture(e.pointerId);
-      }
-      activePointerId = null;
-    };
-
-    // Prevent native HTML5 drag from firing on our SVG elements
-    const preventDragStart = (e) => {
-      if (getDraggableTarget(e)) {
-        e.preventDefault();
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && dragStateRef.current.isDragging) {
+        dragStateRef.current = {
+          isDragging: false,
+          dragType: null,
+          bubbleId: null,
+          taskType: null,
+          taskIndex: null,
+          startX: 0,
+          startY: 0,
+          originalX: 0,
+          originalY: 0,
+          originalSize: 0,
+          originalAnchor: 0,
+        };
+        setIsCarrying(false);
       }
     };
 
-    // All pointer events on the SVG in capture phase — intercepts before Gutenberg
-    svg.addEventListener("pointerdown", handlePointerDown, true);
-    svg.addEventListener("pointermove", handlePointerMove, true);
-    svg.addEventListener("pointerup", handlePointerUp, true);
-    svg.addEventListener("dragstart", preventDragStart, true);
+    // click on container (bubble phase — no conflict with Gutenberg drag)
+    container.addEventListener("click", handleClick);
+    // mousemove on document so it works even outside the SVG area
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      svg.removeEventListener("pointerdown", handlePointerDown, true);
-      svg.removeEventListener("pointermove", handlePointerMove, true);
-      svg.removeEventListener("pointerup", handlePointerUp, true);
-      svg.removeEventListener("dragstart", preventDragStart, true);
-      if (activePointerId !== null && svg.hasPointerCapture(activePointerId)) {
-        svg.releasePointerCapture(activePointerId);
-      }
+      container.removeEventListener("click", handleClick);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [editMode, timelineSteps, previewMode, setAttributes]);
+  }, [editMode, previewMode, setAttributes]);
 
   // Helpers
   const updateSetting = (key, value) => {
@@ -983,13 +988,13 @@ export default function Edit({ attributes, setAttributes }) {
           </ButtonGroup>
 
           <ToggleControl
-            label="Edit Mode (Drag & Drop)"
+            label="Edit Mode (Click to Move)"
             checked={editMode}
             onChange={setEditMode}
             help={
               editMode
-                ? "Drag bubbles to move/resize. Drag labels to position. Drag indicators to adjust anchor."
-                : "Enable to interactively edit bubbles, labels, and indicators."
+                ? "Click a bubble to pick it up, move mouse, click again to drop. Click labels/indicators too. Press Escape to cancel."
+                : "Enable to interactively reposition bubbles, labels, and indicators."
             }
           />
 
@@ -1010,7 +1015,7 @@ export default function Edit({ attributes, setAttributes }) {
         <div
           className={`ppt-timeline-wrapper ppt-timeline-wrapper--${previewMode}${
             editMode ? " edit-mode" : ""
-          }`}
+          }${isCarrying ? " carrying" : ""}`}
           ref={containerRef}
         />
       </div>
