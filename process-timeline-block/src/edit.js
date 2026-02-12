@@ -104,14 +104,36 @@ export default function Edit({ attributes, setAttributes }) {
       return;
     }
 
-    const handleMouseDown = (e) => {
+    // Helper: check if event target is a draggable timeline element
+    const getDraggableTarget = (e) => {
+      const bubble = e.target.closest(".bubble");
+      const label = e.target.closest(".label-text");
+      const indicator = e.target.closest(".draggable-indicator");
+      return bubble || label || indicator;
+    };
+
+    let activePointerId = null;
+
+    const handlePointerDown = (e) => {
       if (previewMode !== "horizontal") {
-        return; // Only allow drag in horizontal mode
+        return;
+      }
+      if (!getDraggableTarget(e)) {
+        return;
       }
 
       const bubble = e.target.closest(".bubble");
       const label = e.target.closest(".label-text");
       const indicator = e.target.closest(".draggable-indicator");
+
+      // Prevent Gutenberg from seeing this event at all
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Capture pointer to this element so pointermove/pointerup
+      // fire on the SVG even if the cursor leaves it
+      svg.setPointerCapture(e.pointerId);
+      activePointerId = e.pointerId;
 
       if (bubble) {
         const bubbleId = bubble.dataset.id;
@@ -119,9 +141,6 @@ export default function Edit({ attributes, setAttributes }) {
         if (!step) {
           return;
         }
-
-        e.preventDefault();
-        e.stopPropagation(); // Stop Gutenberg from intercepting
         dragStateRef.current = {
           isDragging: true,
           dragType: "bubble",
@@ -144,7 +163,6 @@ export default function Edit({ attributes, setAttributes }) {
         if (!step) {
           return;
         }
-
         const taskArray = Array.isArray(step[taskType])
           ? step[taskType]
           : [step[taskType]];
@@ -152,9 +170,6 @@ export default function Edit({ attributes, setAttributes }) {
         if (!task) {
           return;
         }
-
-        e.preventDefault();
-        e.stopPropagation(); // Stop Gutenberg from intercepting
         dragStateRef.current = {
           isDragging: true,
           dragType: "label",
@@ -177,7 +192,6 @@ export default function Edit({ attributes, setAttributes }) {
         if (!step) {
           return;
         }
-
         const taskArray = Array.isArray(step[taskType])
           ? step[taskType]
           : [step[taskType]];
@@ -185,9 +199,6 @@ export default function Edit({ attributes, setAttributes }) {
         if (!task) {
           return;
         }
-
-        e.preventDefault();
-        e.stopPropagation(); // Stop Gutenberg from intercepting
         dragStateRef.current = {
           isDragging: true,
           dragType: "indicator",
@@ -205,10 +216,13 @@ export default function Edit({ attributes, setAttributes }) {
       }
     };
 
-    const handleMouseMove = (e) => {
+    const handlePointerMove = (e) => {
       if (!dragStateRef.current.isDragging) {
         return;
       }
+
+      e.preventDefault();
+      e.stopPropagation();
 
       const deltaX = e.clientX - dragStateRef.current.startX;
       const deltaY = e.clientY - dragStateRef.current.startY;
@@ -292,7 +306,10 @@ export default function Edit({ attributes, setAttributes }) {
       }
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = (e) => {
+      if (!dragStateRef.current.isDragging) {
+        return;
+      }
       dragStateRef.current = {
         isDragging: false,
         dragType: null,
@@ -306,61 +323,32 @@ export default function Edit({ attributes, setAttributes }) {
         originalSize: 0,
         originalAnchor: 0,
       };
-    };
-
-    // Prevent Gutenberg's native HTML5 drag on the block when in edit mode
-    const blockWrapper = container.closest(".wp-block");
-    const preventDragStart = (e) => {
-      if (dragStateRef.current.isDragging) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    // Also intercept pointerdown on the SVG to call setPointerCapture,
-    // which prevents Gutenberg's own pointer-based block dragging.
-    const handlePointerDown = (e) => {
-      const bubble = e.target.closest(".bubble");
-      const label = e.target.closest(".label-text");
-      const indicator = e.target.closest(".draggable-indicator");
-      if (bubble || label || indicator) {
-        e.stopPropagation();
-        // Capture the pointer so all subsequent pointer events go to the SVG,
-        // preventing Gutenberg from seeing them.
-        svg.setPointerCapture(e.pointerId);
-      }
-    };
-
-    const handlePointerUp = (e) => {
       if (svg.hasPointerCapture(e.pointerId)) {
         svg.releasePointerCapture(e.pointerId);
       }
+      activePointerId = null;
     };
 
-    // Use capture phase to intercept before Gutenberg
-    svg.addEventListener("mousedown", handleMouseDown, true);
-    svg.addEventListener("pointerdown", handlePointerDown, true);
-    svg.addEventListener("pointerup", handlePointerUp, true);
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    // Prevent native HTML5 drag from firing on our SVG elements
+    const preventDragStart = (e) => {
+      if (getDraggableTarget(e)) {
+        e.preventDefault();
+      }
+    };
 
-    // Prevent native drag on the block wrapper and the SVG itself
-    if (blockWrapper) {
-      blockWrapper.setAttribute("draggable", "false");
-      blockWrapper.addEventListener("dragstart", preventDragStart, true);
-    }
+    // All pointer events on the SVG in capture phase — intercepts before Gutenberg
+    svg.addEventListener("pointerdown", handlePointerDown, true);
+    svg.addEventListener("pointermove", handlePointerMove, true);
+    svg.addEventListener("pointerup", handlePointerUp, true);
     svg.addEventListener("dragstart", preventDragStart, true);
 
     return () => {
-      svg.removeEventListener("mousedown", handleMouseDown, true);
       svg.removeEventListener("pointerdown", handlePointerDown, true);
+      svg.removeEventListener("pointermove", handlePointerMove, true);
       svg.removeEventListener("pointerup", handlePointerUp, true);
       svg.removeEventListener("dragstart", preventDragStart, true);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      if (blockWrapper) {
-        blockWrapper.removeAttribute("draggable");
-        blockWrapper.removeEventListener("dragstart", preventDragStart, true);
+      if (activePointerId !== null && svg.hasPointerCapture(activePointerId)) {
+        svg.releasePointerCapture(activePointerId);
       }
     };
   }, [editMode, timelineSteps, previewMode, setAttributes]);

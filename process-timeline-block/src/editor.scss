@@ -127,14 +127,7 @@
   }
 }
 
-/* Prevent Gutenberg block dragging when in edit mode */
-.wp-block[draggable="false"] {
-  .block-editor-block-mover {
-    pointer-events: none;
-  }
-}
-
-/* Prevent touch-action so pointer capture works properly */
+/* Prevent Gutenberg block movers when in edit mode */
 .ppt-timeline-wrapper.edit-mode svg {
   touch-action: none;
 }
