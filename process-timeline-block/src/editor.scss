@@ -1,146 +1,151 @@
 /* Process Timeline Block - Editor-only Styles */
 
 .ppt-editor {
-	border: 1px solid #e0e0e0;
-	border-radius: 4px;
-	background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fff;
 }
 
 .ppt-preview {
-	padding: 1rem;
+  padding: 1rem;
 }
 
 .ppt-preview-controls {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	flex-wrap: wrap;
-	margin-bottom: 1rem;
-	padding-bottom: 0.75rem;
-	border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
 }
 
 .ppt-preview-versions {
-	display: flex;
-	gap: 0.25rem;
-	flex-wrap: wrap;
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
 }
 
 /* Bubble editor in sidebar */
 .ppt-bubble-editor {
-	margin-top: 12px;
+  margin-top: 12px;
 
-	.components-base-control {
-		margin-bottom: 8px;
-	}
+  .components-base-control {
+    margin-bottom: 8px;
+  }
 }
 
 .ppt-task-section {
-	margin-top: 16px;
-	padding: 12px;
-	background: #f8f8f8;
-	border-radius: 4px;
+  margin-top: 16px;
+  padding: 12px;
+  background: #f8f8f8;
+  border-radius: 4px;
 }
 
 .ppt-task-section-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 8px;
-	font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
 }
 
 .ppt-task-item {
-	padding: 8px;
-	margin-bottom: 8px;
-	background: #fff;
-	border: 1px solid #e0e0e0;
-	border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
 
-	.components-base-control {
-		margin-bottom: 4px;
-	}
+  .components-base-control {
+    margin-bottom: 4px;
+  }
 
-	.components-base-control__label {
-		font-size: 11px;
-	}
+  .components-base-control__label {
+    font-size: 11px;
+  }
 }
 
 .ppt-task-item-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 6px;
-	font-size: 12px;
-	font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* Version manager in sidebar */
 .ppt-version-manager {
-	.components-text-control__input {
-		font-size: 13px;
-	}
+  .components-text-control__input {
+    font-size: 13px;
+  }
 }
 
 .ppt-version-list {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
 }
 
 .ppt-version-item {
-	display: flex;
-	gap: 4px;
-	align-items: center;
+  display: flex;
+  gap: 4px;
+  align-items: center;
 
-	&.active {
-		font-weight: bold;
-	}
+  &.active {
+    font-weight: bold;
+  }
 }
 
 /* Edit Mode Styles */
 .ppt-timeline-wrapper {
-	position: relative;
+  position: relative;
 
-	/* Draggable cursor styles */
-	&.edit-mode {
-		user-select: none; /* Prevent text selection while dragging */
+  /* Draggable cursor styles */
+  &.edit-mode {
+    user-select: none; /* Prevent text selection while dragging */
 
-		svg {
-			pointer-events: all; /* Ensure SVG captures all pointer events */
-		}
+    svg {
+      pointer-events: all; /* Ensure SVG captures all pointer events */
+    }
 
-		.bubble {
-			cursor: move;
-		}
+    .bubble {
+      cursor: move;
+    }
 
-		.draggable-label {
-			cursor: move;
-			pointer-events: all;
-		}
+    .draggable-label {
+      cursor: move;
+      pointer-events: all;
+    }
 
-		.draggable-indicator {
-			cursor: ew-resize; /* horizontal resize for anchor adjustment */
-			pointer-events: all;
-		}
-	}
+    .draggable-indicator {
+      cursor: ew-resize; /* horizontal resize for anchor adjustment */
+      pointer-events: all;
+    }
+  }
 }
 
 /* Prevent Gutenberg block dragging when in edit mode */
-.wp-block[data-block-dragging-disabled='true'] {
-	.block-editor-block-mover {
-		pointer-events: none;
-	}
+.wp-block[draggable="false"] {
+  .block-editor-block-mover {
+    pointer-events: none;
+  }
+}
+
+/* Prevent touch-action so pointer capture works properly */
+.ppt-timeline-wrapper.edit-mode svg {
+  touch-action: none;
 }
 
 /* Edit mode toggle control */
 .ppt-preview-controls {
-	.components-toggle-control {
-		margin: 0;
+  .components-toggle-control {
+    margin: 0;
 
-		.components-toggle-control__label {
-			font-weight: 600;
-		}
-	}
+    .components-toggle-control__label {
+      font-weight: 600;
+    }
+  }
 }
