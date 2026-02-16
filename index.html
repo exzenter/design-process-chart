@@ -648,6 +648,71 @@
           </div>
         </div>
 
+        <!-- Curve Path (Horizontal Mode) -->
+        <div class="settings-section">
+          <h3>Curve Path (Horizontal)</h3>
+          <div class="setting-item checkbox-item">
+            <label>
+              <input type="checkbox" id="curve-enabled" />
+              Enable Curved Timeline
+            </label>
+          </div>
+          <div id="curve-controls" style="display: none">
+            <div class="setting-item" style="display: none">
+              <label>Curve Type</label>
+              <select id="curve-type">
+                <option value="bezier">Bezier Curve</option>
+                <option value="s-curve" selected>S-Curve</option>
+              </select>
+            </div>
+            <div style="margin-top: 12px">
+              <label
+                style="display: block; margin-bottom: 8px; font-size: 0.85rem">
+                Curve Path Editor
+              </label>
+              <svg
+                id="curve-editor-svg"
+                viewBox="0 0 100 50"
+                style="
+                  width: 100%;
+                  height: 120px;
+                  background: white;
+                  border: 1px solid #ddd;
+                  border-radius: 4px;
+                  cursor: default;
+                ">
+                <line
+                  x1="0"
+                  y1="25"
+                  x2="100"
+                  y2="25"
+                  stroke="#ddd"
+                  stroke-width="0.5" />
+                <line
+                  x1="50"
+                  y1="0"
+                  x2="50"
+                  y2="50"
+                  stroke="#ddd"
+                  stroke-width="0.5" />
+              </svg>
+              <div style="font-size: 11px; margin-top: 8px; color: #666">
+                <strong>Drag</strong> endpoints and control handles to shape the
+                curve
+              </div>
+              <div id="curve-points-list" style="margin-top: 8px"></div>
+              <div style="margin-top: 12px; display: flex; gap: 8px">
+                <button class="version-action-btn" id="reset-s-curve">
+                  Reset S-Curve
+                </button>
+                <button class="version-action-btn" id="reset-straight">
+                  Reset Straight
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Description Lines -->
         <div class="settings-section">
           <h3>Description Lines</h3>

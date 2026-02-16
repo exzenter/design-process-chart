@@ -379,4 +379,13 @@ export const DEFAULT_SETTINGS = {
   entryIndicatorStagger: 60,
   entryIndicatorDelay: 200,
   entryEasing: "ease-out",
+  // Curve path settings for horizontal mode
+  curveEnabled: false,
+  curveType: "bezier", // 'bezier' or 's-curve'
+  curvePoints: [
+    { x: 0, y: 0.5 },
+    { x: 0.33, y: 0.3 },
+    { x: 0.67, y: 0.7 },
+    { x: 1, y: 0.5 },
+  ],
 };

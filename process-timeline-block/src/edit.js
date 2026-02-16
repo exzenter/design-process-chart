@@ -652,6 +652,286 @@ export default function Edit({ attributes, setAttributes }) {
           />
         </PanelBody>
 
+        {/* ===== CURVE PATH (Horizontal Mode) ===== */}
+        <PanelBody title="Curve Path (Horizontal)" initialOpen={false}>
+          <ToggleControl
+            label="Enable Curved Timeline"
+            help="Draw the timeline as a curve instead of a straight line (horizontal mode only)"
+            checked={settings?.curveEnabled || false}
+            onChange={(val) => updateSetting("curveEnabled", val)}
+          />
+
+          {settings?.curveEnabled && (
+            <>
+              <BaseControl
+                label="Bezier Curve Editor"
+                help="Drag the control handles to shape the curve. Endpoints stay at the edges.">
+                <div
+                  style={{
+                    background: "#f0f0f0",
+                    padding: "12px",
+                    borderRadius: "4px",
+                    marginTop: "8px",
+                  }}>
+                  {(() => {
+                    const pts = settings?.curvePoints || [
+                      { x: 0, y: 0.5 },
+                      { x: 0.33, y: 0.3 },
+                      { x: 0.67, y: 0.7 },
+                      { x: 1, y: 0.5 },
+                    ];
+                    // Ensure exactly 4 points
+                    const safePts =
+                      pts.length === 4
+                        ? pts
+                        : [
+                            { x: 0, y: 0.5 },
+                            { x: 0.33, y: 0.3 },
+                            { x: 0.67, y: 0.7 },
+                            { x: 1, y: 0.5 },
+                          ];
+                    const pointLabels = [
+                      "Start",
+                      "Control 1",
+                      "Control 2",
+                      "End",
+                    ];
+                    const pointColors = ["#333", "#e63946", "#e63946", "#333"];
+
+                    return (
+                      <>
+                        <svg
+                          viewBox="0 0 100 50"
+                          style={{
+                            width: "100%",
+                            height: "120px",
+                            background: "white",
+                            border: "1px solid #ddd",
+                            borderRadius: "4px",
+                            cursor: "default",
+                          }}>
+                          {/* Grid */}
+                          <line
+                            x1="0"
+                            y1="25"
+                            x2="100"
+                            y2="25"
+                            stroke="#ddd"
+                            strokeWidth="0.5"
+                          />
+                          <line
+                            x1="50"
+                            y1="0"
+                            x2="50"
+                            y2="50"
+                            stroke="#ddd"
+                            strokeWidth="0.5"
+                          />
+
+                          {/* Handle lines */}
+                          <line
+                            x1={safePts[0].x * 100}
+                            y1={safePts[0].y * 50}
+                            x2={safePts[1].x * 100}
+                            y2={safePts[1].y * 50}
+                            stroke="#aaa"
+                            strokeWidth="0.8"
+                            strokeDasharray="2,2"
+                          />
+                          <line
+                            x1={safePts[3].x * 100}
+                            y1={safePts[3].y * 50}
+                            x2={safePts[2].x * 100}
+                            y2={safePts[2].y * 50}
+                            stroke="#aaa"
+                            strokeWidth="0.8"
+                            strokeDasharray="2,2"
+                          />
+
+                          {/* Cubic bezier curve */}
+                          <path
+                            d={`M ${safePts[0].x * 100} ${
+                              safePts[0].y * 50
+                            } C ${safePts[1].x * 100} ${safePts[1].y * 50}, ${
+                              safePts[2].x * 100
+                            } ${safePts[2].y * 50}, ${safePts[3].x * 100} ${
+                              safePts[3].y * 50
+                            }`}
+                            stroke={settings?.timelineColor || "#333"}
+                            strokeWidth="2"
+                            fill="none"
+                          />
+
+                          {/* Control points */}
+                          {safePts.map((pt, i) => (
+                            <circle
+                              key={i}
+                              cx={pt.x * 100}
+                              cy={pt.y * 50}
+                              r={i === 1 || i === 2 ? "3.5" : "3"}
+                              fill={pointColors[i]}
+                              stroke="white"
+                              strokeWidth="1"
+                              style={{ cursor: "pointer" }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                const svg = e.currentTarget.ownerSVGElement;
+                                const rect = svg.getBoundingClientRect();
+
+                                const handleMove = (moveE) => {
+                                  let x =
+                                    (moveE.clientX - rect.left) / rect.width;
+                                  let y =
+                                    (moveE.clientY - rect.top) / rect.height;
+                                  // Lock endpoint X positions
+                                  if (i === 0) x = 0;
+                                  if (i === 3) x = 1;
+                                  const newPoints = [...safePts];
+                                  newPoints[i] = {
+                                    x: Math.max(0, Math.min(1, x)),
+                                    y: Math.max(0, Math.min(1, y)),
+                                  };
+                                  updateSetting("curvePoints", newPoints);
+                                };
+
+                                const handleUp = () => {
+                                  document.removeEventListener(
+                                    "mousemove",
+                                    handleMove,
+                                  );
+                                  document.removeEventListener(
+                                    "mouseup",
+                                    handleUp,
+                                  );
+                                };
+
+                                document.addEventListener(
+                                  "mousemove",
+                                  handleMove,
+                                );
+                                document.addEventListener("mouseup", handleUp);
+                              }}
+                            />
+                          ))}
+                        </svg>
+
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            fontSize: "11px",
+                            color: "#666",
+                          }}>
+                          <strong>Drag</strong> endpoints and control handles to
+                          shape the curve
+                        </div>
+
+                        {safePts.map((pt, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              alignItems: "center",
+                              marginTop: "8px",
+                              padding: "6px",
+                              background: "white",
+                              borderRadius: "3px",
+                            }}>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                minWidth: "65px",
+                                color: pointColors[i],
+                                fontWeight:
+                                  i === 1 || i === 2 ? "bold" : "normal",
+                              }}>
+                              {pointLabels[i]}:
+                            </span>
+                            <span style={{ fontSize: "10px", color: "#999" }}>
+                              X
+                            </span>
+                            <input
+                              type="number"
+                              value={Math.round(pt.x * 100)}
+                              onChange={(e) => {
+                                const newPoints = [...safePts];
+                                newPoints[i] = {
+                                  ...newPoints[i],
+                                  x: Number(e.target.value) / 100,
+                                };
+                                updateSetting("curvePoints", newPoints);
+                              }}
+                              min="0"
+                              max="100"
+                              step="1"
+                              disabled={i === 0 || i === 3}
+                              style={{ width: "50px", fontSize: "11px" }}
+                            />
+                            <span style={{ fontSize: "10px", color: "#999" }}>
+                              Y
+                            </span>
+                            <input
+                              type="number"
+                              value={Math.round(pt.y * 100)}
+                              onChange={(e) => {
+                                const newPoints = [...safePts];
+                                newPoints[i] = {
+                                  ...newPoints[i],
+                                  y: Number(e.target.value) / 100,
+                                };
+                                updateSetting("curvePoints", newPoints);
+                              }}
+                              min="0"
+                              max="100"
+                              step="1"
+                              style={{ width: "50px", fontSize: "11px" }}
+                            />
+                          </div>
+                        ))}
+
+                        <div
+                          style={{
+                            marginTop: "12px",
+                            display: "flex",
+                            gap: "8px",
+                          }}>
+                          <Button
+                            variant="secondary"
+                            isSmall
+                            onClick={() => {
+                              updateSetting("curvePoints", [
+                                { x: 0, y: 0.5 },
+                                { x: 0.33, y: 0.3 },
+                                { x: 0.67, y: 0.7 },
+                                { x: 1, y: 0.5 },
+                              ]);
+                            }}>
+                            Reset S-Curve
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            isSmall
+                            onClick={() => {
+                              updateSetting("curvePoints", [
+                                { x: 0, y: 0.5 },
+                                { x: 0.33, y: 0.5 },
+                                { x: 0.67, y: 0.5 },
+                                { x: 1, y: 0.5 },
+                              ]);
+                            }}>
+                            Reset Straight
+                          </Button>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </BaseControl>
+            </>
+          )}
+        </PanelBody>
+
         {/* ===== CONNECTION LINES ===== */}
         <PanelBody title="Connection Lines" initialOpen={false}>
           <BaseControl label="Color">

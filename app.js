@@ -34,6 +34,14 @@ class ProcessTimeline {
       connectionHoverWidth: 0.1,
       indicatorHoverStroke: 0.1,
       connectionHoverTextScale: 1.0,
+      curveEnabled: false,
+      curveType: "s-curve",
+      curvePoints: [
+        { x: 0, y: 0.5 },
+        { x: 0.33, y: 0.3 },
+        { x: 0.67, y: 0.7 },
+        { x: 1, y: 0.5 },
+      ],
     };
     // Keep a working copy of timeline steps for editing
     this.timelineSteps = JSON.parse(
@@ -318,12 +326,221 @@ class ProcessTimeline {
       });
     }
 
+    // Curve enabled
+    const curveEnabled = document.getElementById("curve-enabled");
+    const curveControls = document.getElementById("curve-controls");
+    if (curveEnabled) {
+      curveEnabled.addEventListener("change", (e) => {
+        this.settings.curveEnabled = e.target.checked;
+        if (curveControls) {
+          curveControls.style.display = e.target.checked ? "block" : "none";
+        }
+        this.render();
+      });
+    }
+
+    // Curve type
+    const curveType = document.getElementById("curve-type");
+    if (curveType) {
+      curveType.addEventListener("change", (e) => {
+        this.settings.curveType = e.target.value;
+        this.updateCurveEditor();
+        this.render();
+      });
+    }
+
+    // Curve editor SVG
+    this.setupCurveEditor();
+
+    // Reset buttons
+    const resetSCurve = document.getElementById("reset-s-curve");
+    if (resetSCurve) {
+      resetSCurve.addEventListener("click", () => {
+        this.settings.curvePoints = [
+          { x: 0, y: 0.5 },
+          { x: 0.33, y: 0.3 },
+          { x: 0.67, y: 0.7 },
+          { x: 1, y: 0.5 },
+        ];
+        this.updateCurveEditor();
+        this.render();
+      });
+    }
+
+    const resetStraight = document.getElementById("reset-straight");
+    if (resetStraight) {
+      resetStraight.addEventListener("click", () => {
+        this.settings.curvePoints = [
+          { x: 0, y: 0.5 },
+          { x: 0.33, y: 0.5 },
+          { x: 0.67, y: 0.5 },
+          { x: 1, y: 0.5 },
+        ];
+        this.updateCurveEditor();
+        this.render();
+      });
+    }
+
     // Reset button
     if (resetBtn) {
       resetBtn.addEventListener("click", () => {
         this.resetSettings();
       });
     }
+  }
+
+  setupCurveEditor() {
+    const svg = document.getElementById("curve-editor-svg");
+    if (!svg) return;
+
+    // Ensure we always have exactly 4 points for cubic bezier
+    if (!this.settings.curvePoints || this.settings.curvePoints.length !== 4) {
+      this.settings.curvePoints = [
+        { x: 0, y: 0.5 },
+        { x: 0.33, y: 0.3 },
+        { x: 0.67, y: 0.7 },
+        { x: 1, y: 0.5 },
+      ];
+    }
+
+    let draggedPointIndex = null;
+    let didDrag = false;
+
+    svg.addEventListener("mousedown", (e) => {
+      if (e.target.classList.contains("curve-point")) {
+        draggedPointIndex = parseInt(e.target.dataset.index);
+        didDrag = false;
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (draggedPointIndex === null) return;
+      didDrag = true;
+
+      const rect = svg.getBoundingClientRect();
+      let x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      let y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+
+      // Endpoints (0 and 3) lock X to 0 and 1 respectively
+      if (draggedPointIndex === 0) x = 0;
+      if (draggedPointIndex === 3) x = 1;
+
+      this.settings.curvePoints[draggedPointIndex] = { x, y };
+      this.updateCurveEditor();
+      this.render();
+    });
+
+    document.addEventListener("mouseup", () => {
+      draggedPointIndex = null;
+    });
+
+    this.updateCurveEditor();
+  }
+
+  updateCurveEditor() {
+    const svg = document.getElementById("curve-editor-svg");
+    const pointsList = document.getElementById("curve-points-list");
+    if (!svg || !pointsList) return;
+
+    // Clear existing dynamic elements
+    svg
+      .querySelectorAll(".curve-path, .curve-point, .curve-handle-line")
+      .forEach((el) => el.remove());
+
+    const pts = this.settings.curvePoints;
+    if (!pts || pts.length !== 4) return;
+
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const sx = (v) => v * 100; // scale x to viewBox
+    const sy = (v) => v * 50; // scale y to viewBox
+
+    // Draw handle lines (dashed lines from endpoints to their control points)
+    const handlePairs = [
+      [0, 1], // start endpoint -> control point 1
+      [3, 2], // end endpoint -> control point 2
+    ];
+
+    handlePairs.forEach(([endIdx, ctrlIdx]) => {
+      const line = document.createElementNS(SVG_NS, "line");
+      line.setAttribute("x1", sx(pts[endIdx].x));
+      line.setAttribute("y1", sy(pts[endIdx].y));
+      line.setAttribute("x2", sx(pts[ctrlIdx].x));
+      line.setAttribute("y2", sy(pts[ctrlIdx].y));
+      line.setAttribute("stroke", "#aaa");
+      line.setAttribute("stroke-width", "0.8");
+      line.setAttribute("stroke-dasharray", "2,2");
+      line.classList.add("curve-handle-line");
+      svg.appendChild(line);
+    });
+
+    // Draw the cubic bezier curve
+    const path = document.createElementNS(SVG_NS, "path");
+    const pathData = `M ${sx(pts[0].x)} ${sy(pts[0].y)} C ${sx(pts[1].x)} ${sy(pts[1].y)}, ${sx(pts[2].x)} ${sy(pts[2].y)}, ${sx(pts[3].x)} ${sy(pts[3].y)}`;
+    path.setAttribute("d", pathData);
+    path.setAttribute("stroke", this.settings.timelineColor);
+    path.setAttribute("stroke-width", "2");
+    path.setAttribute("fill", "none");
+    path.classList.add("curve-path");
+    svg.appendChild(path);
+
+    // Draw control points
+    const pointLabels = ["Start", "Control 1", "Control 2", "End"];
+    const pointColors = ["#333", "#e63946", "#e63946", "#333"];
+    const pointRadii = [3, 3.5, 3.5, 3];
+
+    pts.forEach((pt, i) => {
+      const circle = document.createElementNS(SVG_NS, "circle");
+      circle.setAttribute("cx", sx(pt.x));
+      circle.setAttribute("cy", sy(pt.y));
+      circle.setAttribute("r", pointRadii[i]);
+      circle.setAttribute("fill", pointColors[i]);
+      circle.setAttribute("stroke", "white");
+      circle.setAttribute("stroke-width", "1");
+      circle.style.cursor = "pointer";
+      circle.classList.add("curve-point");
+      circle.dataset.index = i;
+      svg.appendChild(circle);
+    });
+
+    // Update points list with labeled inputs
+    pointsList.innerHTML = "";
+    pts.forEach((pt, i) => {
+      const div = document.createElement("div");
+      div.style.cssText =
+        "display: flex; gap: 8px; align-items: center; margin-top: 8px; padding: 6px; background: white; border-radius: 3px;";
+
+      const isEndpoint = i === 0 || i === 3;
+      div.innerHTML = `
+        <span style="font-size: 11px; min-width: 65px; color: ${pointColors[i]}; font-weight: ${isEndpoint ? "normal" : "bold"}">${pointLabels[i]}:</span>
+        <label style="font-size: 10px; color: #999">X</label>
+        <input type="number" class="curve-point-x" data-index="${i}" value="${Math.round(pt.x * 100)}" min="0" max="100" step="1" style="width: 50px; font-size: 11px" ${isEndpoint ? "disabled" : ""} />
+        <label style="font-size: 10px; color: #999">Y</label>
+        <input type="number" class="curve-point-y" data-index="${i}" value="${Math.round(pt.y * 100)}" min="0" max="100" step="1" style="width: 50px; font-size: 11px" />
+      `;
+
+      pointsList.appendChild(div);
+    });
+
+    // Add event listeners for point inputs
+    pointsList.querySelectorAll(".curve-point-x").forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const idx = parseInt(e.target.dataset.index);
+        this.settings.curvePoints[idx].x = Number(e.target.value) / 100;
+        this.updateCurveEditor();
+        this.render();
+      });
+    });
+
+    pointsList.querySelectorAll(".curve-point-y").forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const idx = parseInt(e.target.dataset.index);
+        this.settings.curvePoints[idx].y = Number(e.target.value) / 100;
+        this.updateCurveEditor();
+        this.render();
+      });
+    });
   }
 
   setupEditorPanel() {
@@ -1612,6 +1829,14 @@ class ProcessTimeline {
       connectionHoverWidth: 0.1,
       indicatorHoverStroke: 0.1,
       connectionHoverTextScale: 1.0,
+      curveEnabled: false,
+      curveType: "s-curve",
+      curvePoints: [
+        { x: 0, y: 0.5 },
+        { x: 0.33, y: 0.3 },
+        { x: 0.67, y: 0.7 },
+        { x: 1, y: 0.5 },
+      ],
     };
 
     // Update inputs
@@ -1619,6 +1844,13 @@ class ProcessTimeline {
       const input = document.getElementById(`color-${phase}`);
       if (input) input.value = color;
     });
+
+    // Reset curve editor UI
+    const curveEnabled = document.getElementById("curve-enabled");
+    const curveControls = document.getElementById("curve-controls");
+    if (curveEnabled) curveEnabled.checked = false;
+    if (curveControls) curveControls.style.display = "none";
+    this.updateCurveEditor();
 
     document.getElementById("timeline-color").value =
       this.settings.timelineColor;
@@ -1761,16 +1993,7 @@ class ProcessTimeline {
     timelineLine.setAttribute("stroke", this.settings.timelineColor);
     svg.appendChild(timelineLine);
 
-    // Owner labels
-    const prefaceLabel = this.createText(1, centerY - 6.5, "PREFACE", 0.4);
-    prefaceLabel.classList.add("owner-label");
-    prefaceLabel.setAttribute("text-anchor", "start");
-    svg.appendChild(prefaceLabel);
-
-    const clientLabel = this.createText(1, centerY + 7, "CLIENT", 0.4);
-    clientLabel.classList.add("owner-label");
-    clientLabel.setAttribute("text-anchor", "start");
-    svg.appendChild(clientLabel);
+    // Owner labels removed
 
     // Render all steps
     if (window.TIMELINE_STEPS) {
@@ -1814,17 +2037,7 @@ class ProcessTimeline {
     timelineLine.setAttribute("stroke", this.settings.timelineColor);
     svg.appendChild(timelineLine);
 
-    // Owner labels
-    // PREFACE on Left, CLIENT on Right
-    const prefaceLabel = this.createText(centerX - 6.5, 2, "PREFACE", 0.4);
-    prefaceLabel.classList.add("owner-label");
-    prefaceLabel.setAttribute("text-anchor", "middle");
-    svg.appendChild(prefaceLabel);
-
-    const clientLabel = this.createText(centerX + 6.5, 2, "CLIENT", 0.4);
-    clientLabel.classList.add("owner-label");
-    clientLabel.setAttribute("text-anchor", "middle");
-    svg.appendChild(clientLabel);
+    // Owner labels removed
 
     // Render all steps
     if (window.TIMELINE_STEPS) {

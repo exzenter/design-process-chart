@@ -375,34 +375,393 @@ function renderHorizontal(container, steps, phases, settings) {
 
   const centerY = height / 2;
 
-  const tl = createLine(
-    paddingX,
-    centerY,
-    width - paddingX,
-    centerY,
-    settings.timelineWidth,
-  );
-  tl.classList.add("timeline-line");
-  tl.setAttribute("stroke", settings.timelineColor);
-  svg.appendChild(tl);
+  // Check if curve is enabled
+  const curveEnabled = settings.curveEnabled || false;
+  const curveType = settings.curveType || "s-curve";
+  const curvePoints = settings.curvePoints || [
+    { x: 0, y: 0.5 },
+    { x: 0.33, y: 0.3 },
+    { x: 0.67, y: 0.7 },
+    { x: 1, y: 0.5 },
+  ];
 
-  const labelOffset = 6.5 * horizontalModifier;
-  const prefaceLabel = createText(1, centerY - labelOffset, "PREFACE", 0.4);
-  prefaceLabel.classList.add("owner-label");
-  prefaceLabel.setAttribute("text-anchor", "start");
-  svg.appendChild(prefaceLabel);
+  if (curveEnabled && curvePoints.length >= 2) {
+    // Draw curved path
+    const path = document.createElementNS(SVG_NS, "path");
+    let pathData = "";
 
-  const clientLabel = createText(1, centerY + labelOffset + 0.5, "CLIENT", 0.4);
-  clientLabel.classList.add("owner-label");
-  clientLabel.setAttribute("text-anchor", "start");
-  svg.appendChild(clientLabel);
+    if (curvePoints.length === 4) {
+      // Cubic bezier (always used with 4 points)
+      const p0 = {
+        x: paddingX + curvePoints[0].x * (width - 2 * paddingX),
+        y: curvePoints[0].y * height,
+      };
+      const p1 = {
+        x: paddingX + curvePoints[1].x * (width - 2 * paddingX),
+        y: curvePoints[1].y * height,
+      };
+      const p2 = {
+        x: paddingX + curvePoints[2].x * (width - 2 * paddingX),
+        y: curvePoints[2].y * height,
+      };
+      const p3 = {
+        x: paddingX + curvePoints[3].x * (width - 2 * paddingX),
+        y: curvePoints[3].y * height,
+      };
+      pathData = `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y}, ${p2.x} ${p2.y}, ${p3.x} ${p3.y}`;
+    } else {
+      // Fallback: linear segments for non-4-point legacy data
+      const scaledPoints = curvePoints.map((p) => ({
+        x: paddingX + p.x * (width - 2 * paddingX),
+        y: p.y * height,
+      }));
 
-  const sorted = [...steps].sort((a, b) => b.size - a.size);
-  sorted.forEach((step) => {
-    renderStep(svg, step, centerY, false, phases, settings);
-  });
+      pathData = `M ${scaledPoints[0].x} ${scaledPoints[0].y}`;
+      for (let i = 1; i < scaledPoints.length; i++) {
+        pathData += ` L ${scaledPoints[i].x} ${scaledPoints[i].y}`;
+      }
+    }
+
+    path.setAttribute("d", pathData);
+    path.setAttribute("stroke", settings.timelineColor);
+    path.setAttribute("stroke-width", settings.timelineWidth);
+    path.setAttribute("fill", "none");
+    path.classList.add("timeline-line");
+    svg.appendChild(path);
+
+    // Helper function to get point on curve at normalized position t (0-1)
+    const getPointOnCurve = (t) => {
+      if (curvePoints.length === 4) {
+        // Cubic bezier formula
+        const p0 = {
+          x: paddingX + curvePoints[0].x * (width - 2 * paddingX),
+          y: curvePoints[0].y * height,
+        };
+        const p1 = {
+          x: paddingX + curvePoints[1].x * (width - 2 * paddingX),
+          y: curvePoints[1].y * height,
+        };
+        const p2 = {
+          x: paddingX + curvePoints[2].x * (width - 2 * paddingX),
+          y: curvePoints[2].y * height,
+        };
+        const p3 = {
+          x: paddingX + curvePoints[3].x * (width - 2 * paddingX),
+          y: curvePoints[3].y * height,
+        };
+
+        const mt = 1 - t;
+        const x =
+          mt * mt * mt * p0.x +
+          3 * mt * mt * t * p1.x +
+          3 * mt * t * t * p2.x +
+          t * t * t * p3.x;
+        const y =
+          mt * mt * mt * p0.y +
+          3 * mt * mt * t * p1.y +
+          3 * mt * t * t * p2.y +
+          t * t * t * p3.y;
+
+        // Calculate tangent for angle
+        const dx =
+          -3 * mt * mt * p0.x +
+          3 * mt * mt * p1.x -
+          6 * mt * t * p1.x +
+          6 * mt * t * p2.x -
+          3 * t * t * p2.x +
+          3 * t * t * p3.x;
+        const dy =
+          -3 * mt * mt * p0.y +
+          3 * mt * mt * p1.y -
+          6 * mt * t * p1.y +
+          6 * mt * t * p2.y -
+          3 * t * t * p2.y +
+          3 * t * t * p3.y;
+
+        return { x, y, angle: Math.atan2(dy, dx) };
+      } else {
+        // Simple linear interpolation for bezier
+        const scaledPoints = curvePoints.map((p) => ({
+          x: paddingX + p.x * (width - 2 * paddingX),
+          y: p.y * height,
+        }));
+
+        const totalT = t * (scaledPoints.length - 1);
+        const segmentIndex = Math.floor(totalT);
+        const segmentT = totalT - segmentIndex;
+
+        if (segmentIndex >= scaledPoints.length - 1) {
+          const last = scaledPoints[scaledPoints.length - 1];
+          const prev = scaledPoints[scaledPoints.length - 2];
+          return {
+            x: last.x,
+            y: last.y,
+            angle: Math.atan2(last.y - prev.y, last.x - prev.x),
+          };
+        }
+
+        const p0 = scaledPoints[segmentIndex];
+        const p1 = scaledPoints[segmentIndex + 1];
+        const x = p0.x + (p1.x - p0.x) * segmentT;
+        const y = p0.y + (p1.y - p0.y) * segmentT;
+        const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+
+        return { x, y, angle };
+      }
+    };
+
+    // Render steps along the curve
+    const sorted = [...steps].sort((a, b) => b.size - a.size);
+    sorted.forEach((step) => {
+      // Calculate normalized position (0-1) based on step.x
+      const t = (step.x - paddingX) / (width - 2 * paddingX);
+      const curvePoint = getPointOnCurve(Math.max(0, Math.min(1, t)));
+
+      // Render step at curve position
+      renderStepOnCurve(
+        svg,
+        step,
+        curvePoint.x,
+        curvePoint.y,
+        curvePoint.angle,
+        phases,
+        settings,
+      );
+    });
+  } else {
+    // Straight line (original behavior)
+    const tl = createLine(
+      paddingX,
+      centerY,
+      width - paddingX,
+      centerY,
+      settings.timelineWidth,
+    );
+    tl.classList.add("timeline-line");
+    tl.setAttribute("stroke", settings.timelineColor);
+    svg.appendChild(tl);
+
+    const sorted = [...steps].sort((a, b) => b.size - a.size);
+    sorted.forEach((step) => {
+      renderStep(svg, step, centerY, false, phases, settings);
+    });
+  }
 
   container.appendChild(svg);
+}
+
+// New function to render a step on a curved timeline
+function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
+  const phase = phases[step.phase];
+  const color = settings.colors?.[step.phase] || phase?.color || "#ccc";
+  const radius = getBubbleSize(step.size) / 2;
+
+  // Render bubble
+  const bubble = createCircle(cx, cy, radius, color);
+  bubble.classList.add("bubble");
+  bubble.dataset.id = step.id;
+  bubble.style.mixBlendMode = settings.bubbleBlendMode || "multiply";
+
+  // Hover helper for this step
+  const addStepHover = (el) => {
+    el.addEventListener("mouseenter", () => {
+      bubble.classList.add("bubble-highlighted");
+      svg
+        .querySelectorAll(`.connection-line[data-step-id="${step.id}"]`)
+        .forEach((l) => l.classList.add("highlighted"));
+      svg
+        .querySelectorAll(`.label-text[data-step-id="${step.id}"]`)
+        .forEach((l) => l.classList.add("highlighted"));
+      svg
+        .querySelectorAll(`.draggable-indicator[data-step-id="${step.id}"]`)
+        .forEach((l) => l.classList.add("highlighted"));
+    });
+    el.addEventListener("mouseleave", () => {
+      bubble.classList.remove("bubble-highlighted");
+      svg
+        .querySelectorAll(`.connection-line[data-step-id="${step.id}"]`)
+        .forEach((l) => l.classList.remove("highlighted"));
+      svg
+        .querySelectorAll(`.label-text[data-step-id="${step.id}"]`)
+        .forEach((l) => l.classList.remove("highlighted"));
+      svg
+        .querySelectorAll(`.draggable-indicator[data-step-id="${step.id}"]`)
+        .forEach((l) => l.classList.remove("highlighted"));
+    });
+  };
+
+  addStepHover(bubble);
+  svg.appendChild(bubble);
+
+  // Render tasks with perpendicular offset from curve
+  const renderTasks = (tasks, owner) => {
+    if (!tasks) return;
+    const taskArray = Array.isArray(tasks) ? tasks : [tasks];
+
+    taskArray.forEach((task, index) => {
+      // Calculate perpendicular direction (90 degrees from tangent)
+      const perpAngle = angle + Math.PI / 2;
+      const distanceModifier = settings.labelDistanceHorizontal || 1.0;
+      const adjustedLineY = task.lineY * distanceModifier;
+
+      // Along-curve offset: difference between task.lineX and step.x
+      // gives left/right shift along the tangent direction
+      const alongOffset = task.lineX - step.x;
+
+      // Position label: along tangent + perpendicular from curve
+      const labelX =
+        cx +
+        Math.cos(angle) * alongOffset +
+        Math.cos(perpAngle) * adjustedLineY;
+      const labelY =
+        cy +
+        Math.sin(angle) * alongOffset +
+        Math.sin(perpAngle) * adjustedLineY;
+
+      // Apply anchor shift along the bubble circumference
+      // Constrain to the correct side: preface uses negative perpendicular,
+      // client uses positive perpendicular
+      let startX = cx;
+      let startY = cy;
+      if (task.anchor) {
+        // Anchor shifts along the tangent, but we bias toward the correct perpendicular side
+        const sideSign = owner === "preface" ? -1 : 1;
+        const basePerpAngle = angle + (Math.PI / 2) * sideSign;
+        const anchorAngle = basePerpAngle + task.anchor * Math.PI * 0.5;
+        startX = cx + radius * Math.cos(anchorAngle);
+        startY = cy + radius * Math.sin(anchorAngle);
+      } else {
+        // Default: point toward label but clamp to the correct half of the bubble
+        const toLabel = Math.atan2(labelY - cy, labelX - cx);
+        // Determine the perpendicular direction for this owner's side
+        const sideSign = owner === "preface" ? -1 : 1;
+        const sideAngle = angle + (Math.PI / 2) * sideSign;
+        // Check if toLabel is on the correct side by comparing with sideAngle
+        // Use dot product: if the toLabel direction has a positive component
+        // along the correct perpendicular, it's fine; otherwise snap to sideAngle
+        const dot =
+          Math.cos(toLabel) * Math.cos(sideAngle) +
+          Math.sin(toLabel) * Math.sin(sideAngle);
+        const finalAngle = dot > 0 ? toLabel : sideAngle;
+        startX = cx + radius * Math.cos(finalAngle);
+        startY = cy + radius * Math.sin(finalAngle);
+      }
+
+      // Connection line with text bounding box padding
+      const sizeMap = {
+        M: 0.3,
+        L: 0.4,
+        XL: 0.5,
+        XXL: 0.6,
+        "3XL": 0.7,
+        "4XL": 0.8,
+      };
+      const fontSize = sizeMap[task.fontSize] || sizeMap.M;
+      const weightMap = { light: 300, regular: 400, black: 900 };
+      const fontWeight = weightMap[task.fontWeight] || 400;
+
+      const textLines = task.label.split("\n");
+      const longestLine = textLines.reduce(
+        (max, l) => (l.length > max.length ? l : max),
+        "",
+      );
+      const charWidth = fontSize * 0.6;
+      const lineHeight = fontSize * 1.2;
+      const rectW = longestLine.length * charWidth;
+      const rectH = textLines.length * lineHeight;
+      const halfW = rectW / 2;
+      const halfH = rectH / 2;
+
+      // Shrink line end to stop at text bounding box edge
+      const dxLine = labelX - startX;
+      const dyLine = labelY - startY;
+      const revAngle = Math.atan2(dyLine, dxLine) + Math.PI;
+      const cosR = Math.cos(revAngle);
+      const sinR = Math.sin(revAngle);
+
+      let dBox = 0;
+      if (Math.abs(cosR) * halfH > Math.abs(sinR) * halfW) {
+        dBox = halfW / Math.abs(cosR);
+      } else {
+        dBox = halfH / Math.abs(sinR);
+      }
+
+      const paddingDistance = dBox + (settings.connectionPadding || 0);
+      const distToLabel = Math.sqrt(dxLine * dxLine + dyLine * dyLine);
+      const shrinkFactor =
+        distToLabel > 0 ? (distToLabel - paddingDistance) / distToLabel : 0;
+
+      const endX = startX + dxLine * Math.max(0, shrinkFactor);
+      const endY = startY + dyLine * Math.max(0, shrinkFactor);
+
+      let dashArray = null;
+      if (settings.connectionType === "dashed") {
+        dashArray = "0.2, 0.2";
+      } else if (settings.connectionType === "dotted") {
+        dashArray = "0.05, 0.15";
+      }
+
+      const line = createLine(
+        startX,
+        startY,
+        endX,
+        endY,
+        settings.connectionWidth,
+        dashArray,
+      );
+      line.classList.add("connection-line");
+      line.setAttribute("stroke", settings.connectionColor);
+      line.dataset.stepId = step.id;
+      line.dataset.taskType = owner;
+      line.dataset.taskIndex = index;
+      svg.appendChild(line);
+
+      // Indicator at bubble side (startX, startY)
+      if (settings.indicatorStyle !== "none") {
+        const indicator = renderIndicator(
+          svg,
+          startX,
+          startY,
+          settings.indicatorStyle,
+          settings.indicatorColor,
+          settings.indicatorStrokeWidth,
+          settings.indicatorSize,
+        );
+        if (indicator) {
+          indicator.classList.add("draggable-indicator");
+          indicator.dataset.stepId = step.id;
+          indicator.dataset.taskType = owner;
+          indicator.dataset.taskIndex = index;
+          addStepHover(indicator);
+        }
+      }
+
+      // Label text
+      const label = createText(labelX, labelY, task.label, fontSize);
+      label.classList.add("label-text", "draggable-label");
+      label.setAttribute("fill", settings.textColor);
+      label.setAttribute("font-weight", fontWeight);
+      label.setAttribute("font-family", settings.fontFamily);
+      label.dataset.stepId = step.id;
+      label.dataset.taskType = owner;
+      label.dataset.taskIndex = index;
+
+      if (textLines.length > 1) {
+        const yOffset = (-(textLines.length - 1) * fontSize * 1.2) / 2;
+        label.setAttribute("transform", `translate(0, ${yOffset})`);
+        label.setAttribute("text-anchor", "middle");
+      } else {
+        label.setAttribute("dominant-baseline", "middle");
+        label.setAttribute("text-anchor", "middle");
+      }
+
+      svg.appendChild(label);
+      addStepHover(label);
+    });
+  };
+
+  renderTasks(step.preface, "preface");
+  renderTasks(step.client, "client");
 }
 
 function renderVertical(container, steps, phases, settings) {
@@ -431,16 +790,7 @@ function renderVertical(container, steps, phases, settings) {
   tl.setAttribute("stroke", settings.timelineColor);
   svg.appendChild(tl);
 
-  const labelOffsetX = 6.5 * verticalModifier;
-  const prefaceLabel = createText(centerX - labelOffsetX, 2, "PREFACE", 0.4);
-  prefaceLabel.classList.add("owner-label");
-  prefaceLabel.setAttribute("text-anchor", "middle");
-  svg.appendChild(prefaceLabel);
-
-  const clientLabel = createText(centerX + labelOffsetX, 2, "CLIENT", 0.4);
-  clientLabel.classList.add("owner-label");
-  clientLabel.setAttribute("text-anchor", "middle");
-  svg.appendChild(clientLabel);
+  // Owner labels removed
 
   const sorted = [...steps].sort((a, b) => b.size - a.size);
   sorted.forEach((step) => {
