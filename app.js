@@ -570,25 +570,12 @@ class ProcessTimeline {
       });
     }
 
-    // Preface checkboxes (1-3)
-    for (let i = 1; i <= 3; i++) {
-      const checkbox = document.getElementById(`edit-has-preface-${i}`);
+    // Description checkboxes (1-6)
+    for (let i = 1; i <= 6; i++) {
+      const checkbox = document.getElementById(`edit-has-desc-${i}`);
       if (checkbox) {
         checkbox.addEventListener("change", (e) => {
-          document.getElementById(`preface-controls-${i}`).style.display = e
-            .target.checked
-            ? "block"
-            : "none";
-        });
-      }
-    }
-
-    // Client checkboxes (1-3)
-    for (let i = 1; i <= 3; i++) {
-      const checkbox = document.getElementById(`edit-has-client-${i}`);
-      if (checkbox) {
-        checkbox.addEventListener("change", (e) => {
-          document.getElementById(`client-controls-${i}`).style.display = e
+          document.getElementById(`desc-controls-${i}`).style.display = e
             .target.checked
             ? "block"
             : "none";
@@ -797,14 +784,8 @@ class ProcessTimeline {
 
             // Update editor panel
             const idx = this.dragState.taskIndex + 1;
-            const prefix =
-              this.dragState.taskType === "preface" ? "preface" : "client";
-            const lineXEl = document.getElementById(
-              `edit-${prefix}-lineX-${idx}`,
-            );
-            const lineYEl = document.getElementById(
-              `edit-${prefix}-lineY-${idx}`,
-            );
+            const lineXEl = document.getElementById(`edit-desc-lineX-${idx}`);
+            const lineYEl = document.getElementById(`edit-desc-lineY-${idx}`);
             if (lineXEl) lineXEl.value = task.lineX;
             if (lineYEl) lineYEl.value = task.lineY;
 
@@ -833,11 +814,7 @@ class ProcessTimeline {
 
             // Update editor panel
             const idx = this.dragState.taskIndex + 1;
-            const prefix =
-              this.dragState.taskType === "preface" ? "preface" : "client";
-            const anchorEl = document.getElementById(
-              `edit-${prefix}-anchor-${idx}`,
-            );
+            const anchorEl = document.getElementById(`edit-desc-anchor-${idx}`);
             if (anchorEl) anchorEl.value = task.anchor;
 
             window.TIMELINE_STEPS = this.timelineSteps;
@@ -908,81 +885,47 @@ class ProcessTimeline {
     document.getElementById("edit-size").value = step.size;
     document.getElementById("edit-x").value = step.x;
 
-    // Normalize preface to array (backward compatibility)
-    const prefaceArray = step.preface
-      ? Array.isArray(step.preface)
-        ? step.preface
-        : [step.preface]
-      : [];
-
-    // Populate up to 3 preface descriptions
-    for (let i = 1; i <= 3; i++) {
-      const hasData = i <= prefaceArray.length;
-      const checkbox = document.getElementById(`edit-has-preface-${i}`);
-      const controls = document.getElementById(`preface-controls-${i}`);
-
-      checkbox.checked = hasData;
-      controls.style.display = hasData ? "block" : "none";
-
-      if (hasData) {
-        const data = prefaceArray[i - 1];
-        document.getElementById(`edit-preface-label-${i}`).value =
-          data.label || "";
-        document.getElementById(`edit-preface-size-${i}`).value =
-          data.fontSize || "M";
-        document.getElementById(`edit-preface-weight-${i}`).value =
-          data.fontWeight || "regular";
-        document.getElementById(`edit-preface-lineX-${i}`).value = data.lineX;
-        document.getElementById(`edit-preface-lineY-${i}`).value = data.lineY;
-        document.getElementById(`edit-preface-anchor-${i}`).value =
-          data.anchor || 0;
-      } else {
-        document.getElementById(`edit-preface-label-${i}`).value = "";
-        document.getElementById(`edit-preface-size-${i}`).value = "M";
-        document.getElementById(`edit-preface-weight-${i}`).value = "regular";
-        document.getElementById(`edit-preface-lineX-${i}`).value = step.x;
-        document.getElementById(`edit-preface-lineY-${i}`).value =
-          -7 - (i - 1) * 1.5;
-        document.getElementById(`edit-preface-anchor-${i}`).value = 0;
-      }
+    // Build unified descriptions array (backward compat: merge old preface/client)
+    let descArray = [];
+    if (Array.isArray(step.descriptions)) {
+      descArray = step.descriptions;
+    } else {
+      // Legacy: merge preface (negative lineY) + client (positive lineY)
+      const prefaceRaw = step.preface
+        ? Array.isArray(step.preface) ? step.preface : [step.preface]
+        : [];
+      const clientRaw = step.client
+        ? Array.isArray(step.client) ? step.client : [step.client]
+        : [];
+      descArray = [...prefaceRaw, ...clientRaw];
     }
 
-    // Normalize client to array (backward compatibility)
-    const clientArray = step.client
-      ? Array.isArray(step.client)
-        ? step.client
-        : [step.client]
-      : [];
-
-    // Populate up to 3 client descriptions
-    for (let i = 1; i <= 3; i++) {
-      const hasData = i <= clientArray.length;
-      const checkbox = document.getElementById(`edit-has-client-${i}`);
-      const controls = document.getElementById(`client-controls-${i}`);
+    // Populate up to 6 description slots
+    for (let i = 1; i <= 6; i++) {
+      const hasData = i <= descArray.length;
+      const checkbox = document.getElementById(`edit-has-desc-${i}`);
+      const controls = document.getElementById(`desc-controls-${i}`);
 
       checkbox.checked = hasData;
       controls.style.display = hasData ? "block" : "none";
 
       if (hasData) {
-        const data = clientArray[i - 1];
-        document.getElementById(`edit-client-label-${i}`).value =
-          data.label || "";
-        document.getElementById(`edit-client-size-${i}`).value =
-          data.fontSize || "M";
-        document.getElementById(`edit-client-weight-${i}`).value =
-          data.fontWeight || "regular";
-        document.getElementById(`edit-client-lineX-${i}`).value = data.lineX;
-        document.getElementById(`edit-client-lineY-${i}`).value = data.lineY;
-        document.getElementById(`edit-client-anchor-${i}`).value =
-          data.anchor || 0;
+        const data = descArray[i - 1];
+        document.getElementById(`edit-desc-label-${i}`).value = data.label || "";
+        document.getElementById(`edit-desc-size-${i}`).value = data.fontSize || "M";
+        document.getElementById(`edit-desc-weight-${i}`).value = data.fontWeight || "regular";
+        document.getElementById(`edit-desc-lineX-${i}`).value = data.lineX;
+        document.getElementById(`edit-desc-lineY-${i}`).value = data.lineY;
+        document.getElementById(`edit-desc-anchor-${i}`).value = data.anchor || 0;
       } else {
-        document.getElementById(`edit-client-label-${i}`).value = "";
-        document.getElementById(`edit-client-size-${i}`).value = "M";
-        document.getElementById(`edit-client-weight-${i}`).value = "regular";
-        document.getElementById(`edit-client-lineX-${i}`).value = step.x;
-        document.getElementById(`edit-client-lineY-${i}`).value =
-          7 + (i - 1) * 1.5;
-        document.getElementById(`edit-client-anchor-${i}`).value = 0;
+        // Default values
+        const defaultY = i <= 3 ? -7 - (i - 1) * 1.5 : 7 + (i - 4) * 1.5;
+        document.getElementById(`edit-desc-label-${i}`).value = "";
+        document.getElementById(`edit-desc-size-${i}`).value = "M";
+        document.getElementById(`edit-desc-weight-${i}`).value = "regular";
+        document.getElementById(`edit-desc-lineX-${i}`).value = step.x;
+        document.getElementById(`edit-desc-lineY-${i}`).value = defaultY;
+        document.getElementById(`edit-desc-anchor-${i}`).value = 0;
       }
     }
   }
@@ -1008,58 +951,25 @@ class ProcessTimeline {
       size: size,
     };
 
-    // Collect preface descriptions
-    const prefaceArray = [];
-    for (let i = 1; i <= 3; i++) {
-      const isChecked = document.getElementById(
-        `edit-has-preface-${i}`,
-      ).checked;
+    // Collect descriptions (6 unified slots)
+    const descriptionsArray = [];
+    for (let i = 1; i <= 6; i++) {
+      const isChecked = document.getElementById(`edit-has-desc-${i}`).checked;
       if (isChecked) {
-        prefaceArray.push({
-          label: document.getElementById(`edit-preface-label-${i}`).value,
-          fontSize: document.getElementById(`edit-preface-size-${i}`).value,
-          fontWeight: document.getElementById(`edit-preface-weight-${i}`).value,
-          lineX: parseFloat(
-            document.getElementById(`edit-preface-lineX-${i}`).value,
-          ),
-          lineY: parseFloat(
-            document.getElementById(`edit-preface-lineY-${i}`).value,
-          ),
-          anchor: parseFloat(
-            document.getElementById(`edit-preface-anchor-${i}`).value,
-          ),
+        descriptionsArray.push({
+          label: document.getElementById(`edit-desc-label-${i}`).value,
+          fontSize: document.getElementById(`edit-desc-size-${i}`).value,
+          fontWeight: document.getElementById(`edit-desc-weight-${i}`).value,
+          lineX: parseFloat(document.getElementById(`edit-desc-lineX-${i}`).value),
+          lineY: parseFloat(document.getElementById(`edit-desc-lineY-${i}`).value),
+          anchor: parseFloat(document.getElementById(`edit-desc-anchor-${i}`).value),
         });
       }
     }
 
-    // Collect client descriptions
-    const clientArray = [];
-    for (let i = 1; i <= 3; i++) {
-      const isChecked = document.getElementById(`edit-has-client-${i}`).checked;
-      if (isChecked) {
-        clientArray.push({
-          label: document.getElementById(`edit-client-label-${i}`).value,
-          fontSize: document.getElementById(`edit-client-size-${i}`).value,
-          fontWeight: document.getElementById(`edit-client-weight-${i}`).value,
-          lineX: parseFloat(
-            document.getElementById(`edit-client-lineX-${i}`).value,
-          ),
-          lineY: parseFloat(
-            document.getElementById(`edit-client-lineY-${i}`).value,
-          ),
-          anchor: parseFloat(
-            document.getElementById(`edit-client-anchor-${i}`).value,
-          ),
-        });
-      }
-    }
-
-    // Add arrays to step if they have items
-    if (prefaceArray.length > 0) {
-      step.preface = prefaceArray.length === 1 ? prefaceArray[0] : prefaceArray;
-    }
-    if (clientArray.length > 0) {
-      step.client = clientArray.length === 1 ? clientArray[0] : clientArray;
+    // Add descriptions to step if present
+    if (descriptionsArray.length > 0) {
+      step.descriptions = descriptionsArray;
     }
 
     // Update
@@ -1139,67 +1049,48 @@ class ProcessTimeline {
 
   generateDataJS() {
     let output = `// Timeline Steps: Bubbles are always centered on the timeline (y=0)\n`;
-    output += `// Each step can have 'preface' (top/left) and 'client' (bottom/right) tasks\n`;
-    output += `// y positions for labels are offsets from the center line\n`;
-    output += `// anchor: -1 (left/top) to 1 (right/bottom) shift on bubble circumference\n\n`;
+    output += `// Each step can have 'descriptions': array of label objects\n`;
+    output += `// lineY < 0 = above bubble, lineY > 0 = below bubble\n`;
+    output += `// anchor: -1 (left) to 1 (right) shift on bubble circumference\n\n`;
     output += `const TIMELINE_STEPS = [\n`;
 
     this.timelineSteps.forEach((step, index) => {
       output += `  {\n`;
       output += `    id: '${step.id}', phase: '${step.phase}', x: ${step.x}, size: ${step.size}`;
 
-      if (step.preface || step.client) {
-        output += `,\n`;
-
+      // Collect all descriptions (unified or legacy preface+client)
+      let allDescs = [];
+      if (Array.isArray(step.descriptions)) {
+        allDescs = step.descriptions;
+      } else {
         if (step.preface) {
-          const prefaceArray = Array.isArray(step.preface)
-            ? step.preface
-            : [step.preface];
-
-          if (prefaceArray.length === 1) {
-            const task = prefaceArray[0];
-            const label = task.label.replace(/\n/g, "\\n");
-            const size = task.fontSize || "M";
-            const weight = task.fontWeight || "regular";
-            output += `    preface: { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
-          } else {
-            output += `    preface: [\n`;
-            prefaceArray.forEach((task, i) => {
-              const label = task.label.replace(/\n/g, "\\n");
-              const size = task.fontSize || "M";
-              const weight = task.fontWeight || "regular";
-              output += `      { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
-              if (i < prefaceArray.length - 1) output += `,\n`;
-            });
-            output += `\n    ]`;
-          }
-
-          if (step.client) output += `,\n`;
-          else output += `\n`;
+          const arr = Array.isArray(step.preface) ? step.preface : [step.preface];
+          allDescs.push(...arr);
         }
-
         if (step.client) {
-          const clientArray = Array.isArray(step.client)
-            ? step.client
-            : [step.client];
+          const arr = Array.isArray(step.client) ? step.client : [step.client];
+          allDescs.push(...arr);
+        }
+      }
 
-          if (clientArray.length === 1) {
-            const task = clientArray[0];
+      if (allDescs.length > 0) {
+        output += `,\n`;
+        if (allDescs.length === 1) {
+          const task = allDescs[0];
+          const label = task.label.replace(/\n/g, "\\n");
+          const size = task.fontSize || "M";
+          const weight = task.fontWeight || "regular";
+          output += `    descriptions: { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }\n`;
+        } else {
+          output += `    descriptions: [\n`;
+          allDescs.forEach((task, i) => {
             const label = task.label.replace(/\n/g, "\\n");
             const size = task.fontSize || "M";
             const weight = task.fontWeight || "regular";
-            output += `    client: { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }\n`;
-          } else {
-            output += `    client: [\n`;
-            clientArray.forEach((task, i) => {
-              const label = task.label.replace(/\n/g, "\\n");
-              const size = task.fontSize || "M";
-              const weight = task.fontWeight || "regular";
-              output += `      { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
-              if (i < clientArray.length - 1) output += `,\n`;
-            });
-            output += `\n    ]\n`;
-          }
+            output += `      { label: '${label}', fontSize: '${size}', fontWeight: '${weight}', lineX: ${task.lineX}, lineY: ${task.lineY}, anchor: ${task.anchor} }`;
+            if (i < allDescs.length - 1) output += `,\n`;
+          });
+          output += `\n    ]\n`;
         }
       } else {
         output += `\n`;
@@ -2160,43 +2051,27 @@ class ProcessTimeline {
 
     svg.appendChild(circle);
 
-    // Render Connections
-    if (step.preface) {
-      const prefaceArray = Array.isArray(step.preface)
-        ? step.preface
-        : [step.preface];
-      prefaceArray.forEach((task, index) => {
-        this.renderConnection(
-          svg,
-          bx,
-          by,
-          task,
-          radius,
-          isVertical,
-          step.id,
-          "preface",
-          index,
-        );
-      });
+    // Render Connections (unified descriptions; backward compat with preface/client)
+    const allDescs = [];
+    if (Array.isArray(step.descriptions)) {
+      allDescs.push(...step.descriptions);
+    } else {
+      // Legacy support
+      if (step.preface) {
+        const arr = Array.isArray(step.preface) ? step.preface : [step.preface];
+        allDescs.push(...arr);
+      }
+      if (step.client) {
+        const arr = Array.isArray(step.client) ? step.client : [step.client];
+        allDescs.push(...arr);
+      }
     }
-    if (step.client) {
-      const clientArray = Array.isArray(step.client)
-        ? step.client
-        : [step.client];
-      clientArray.forEach((task, index) => {
-        this.renderConnection(
-          svg,
-          bx,
-          by,
-          task,
-          radius,
-          isVertical,
-          step.id,
-          "client",
-          index,
-        );
-      });
-    }
+    allDescs.forEach((task, index) => {
+      this.renderConnection(
+        svg, bx, by, task, radius, isVertical,
+        step.id, "descriptions", index,
+      );
+    });
   }
 
   renderConnection(

@@ -7,10 +7,18 @@
 	"category": "widgets",
 	"icon": "clock",
 	"description": "Interactive process timeline with bubble visualization.",
-	"keywords": [ "timeline", "process", "bubbles", "steps" ],
+	"keywords": [
+		"timeline",
+		"process",
+		"bubbles",
+		"steps"
+	],
 	"supports": {
 		"html": false,
-		"align": [ "wide", "full" ],
+		"align": [
+			"wide",
+			"full"
+		],
 		"spacing": {
 			"margin": true,
 			"padding": true
@@ -24,6 +32,10 @@
 		"phases": {
 			"type": "object",
 			"default": {}
+		},
+		"phaseOrder": {
+			"type": "array",
+			"default": []
 		},
 		"settings": {
 			"type": "object",
@@ -56,6 +68,10 @@
 		"showVersionButtons": {
 			"type": "boolean",
 			"default": true
+		},
+		"usePxMode": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"editorScript": "file:./index.js",

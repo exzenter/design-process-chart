@@ -163,10 +163,13 @@ function renderConnection(
     dashArray = "0.05, 0.15";
   }
 
-  const sizeMap = { M: 0.3, L: 0.4, XL: 0.5, XXL: 0.6, "3XL": 0.7, "4XL": 0.8 };
-  const fontSize = sizeMap[task.fontSize] || sizeMap.M;
-  const weightMap = { light: 300, regular: 400, black: 900 };
-  const fontWeight = weightMap[task.fontWeight] || 400;
+  const sizeMap = { S: 0.22, M: 0.3, L: 0.4, XL: 0.5, XXL: 0.6, "3XL": 0.7, "4XL": 0.8 };
+  const typog = (settings.labelTypography || {})[task.fontSize] || {};
+  const fontSize = typog.fontSize ?? sizeMap[task.fontSize] ?? sizeMap.M;
+  const letterSpacing = typog.letterSpacing ?? 0;
+  const sizeWeight = typog.fontWeight ?? 400;
+  const weightMap = { light: 300, black: 900 };
+  const fontWeight = weightMap[task.fontWeight] ?? sizeWeight;
 
   const textLines = task.label.split("\n");
   const longestLine = textLines.reduce(
@@ -229,15 +232,19 @@ function renderConnection(
     indicator.dataset.stepId = stepId;
     indicator.dataset.taskType = owner;
     indicator.dataset.taskIndex = taskIndex;
+    if (task.headingId) indicator.setAttribute("data-heading-id", task.headingId);
   }
 
   const label = createText(labelX, labelY, task.label, fontSize);
   label.classList.add("label-text", "draggable-label");
   label.setAttribute("fill", settings.textColor);
   label.setAttribute("font-weight", fontWeight);
+  label.setAttribute("font-family", settings.fontFamily || "inherit");
+  label.setAttribute("letter-spacing", letterSpacing);
   label.dataset.stepId = stepId;
   label.dataset.taskType = owner;
   label.dataset.taskIndex = taskIndex;
+  if (task.headingId) label.setAttribute("data-heading-id", task.headingId);
 
   if (textLines.length > 1) {
     const yOffset = (-(textLines.length - 1) * fontSize * 1.2) / 2;
@@ -306,6 +313,7 @@ function renderStep(svg, step, centerLine, isVertical, phases, settings) {
   circle.classList.add("bubble");
   circle.dataset.id = step.id;
   circle.dataset.phase = step.phase;
+  if (step.headingId) circle.setAttribute("data-heading-id", step.headingId);
   circle.style.mixBlendMode = settings.bubbleBlendMode || "multiply";
 
   circle.addEventListener("mouseenter", () => {
@@ -356,8 +364,15 @@ function renderStep(svg, step, centerLine, isVertical, phases, settings) {
     });
   };
 
-  renderTasks(step.preface, "preface");
-  renderTasks(step.client, "client");
+  // Unified descriptions (backward compat: merge preface + client)
+  const allDescs = [];
+  if (step.descriptions) {
+    allDescs.push(...(Array.isArray(step.descriptions) ? step.descriptions : [step.descriptions]));
+  } else {
+    if (step.preface) allDescs.push(...(Array.isArray(step.preface) ? step.preface : [step.preface]));
+    if (step.client) allDescs.push(...(Array.isArray(step.client) ? step.client : [step.client]));
+  }
+  if (allDescs.length) renderTasks(allDescs, "descriptions");
 }
 
 function renderHorizontal(container, steps, phases, settings) {
@@ -560,6 +575,7 @@ function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
   const bubble = createCircle(cx, cy, radius, color);
   bubble.classList.add("bubble");
   bubble.dataset.id = step.id;
+  if (step.headingId) bubble.setAttribute("data-heading-id", step.headingId);
   bubble.style.mixBlendMode = settings.bubbleBlendMode || "multiply";
 
   // Hover helper for this step
@@ -619,26 +635,18 @@ function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
         Math.sin(perpAngle) * adjustedLineY;
 
       // Apply anchor shift along the bubble circumference
-      // Constrain to the correct side: preface uses negative perpendicular,
-      // client uses positive perpendicular
+      // Side determined by lineY sign: negative = above (preface side), positive = below (client side)
+      const sideSign = task.lineY < 0 ? -1 : 1;
       let startX = cx;
       let startY = cy;
       if (task.anchor) {
-        // Anchor shifts along the tangent, but we bias toward the correct perpendicular side
-        const sideSign = owner === "preface" ? -1 : 1;
         const basePerpAngle = angle + (Math.PI / 2) * sideSign;
         const anchorAngle = basePerpAngle + task.anchor * Math.PI * 0.5;
         startX = cx + radius * Math.cos(anchorAngle);
         startY = cy + radius * Math.sin(anchorAngle);
       } else {
-        // Default: point toward label but clamp to the correct half of the bubble
         const toLabel = Math.atan2(labelY - cy, labelX - cx);
-        // Determine the perpendicular direction for this owner's side
-        const sideSign = owner === "preface" ? -1 : 1;
         const sideAngle = angle + (Math.PI / 2) * sideSign;
-        // Check if toLabel is on the correct side by comparing with sideAngle
-        // Use dot product: if the toLabel direction has a positive component
-        // along the correct perpendicular, it's fine; otherwise snap to sideAngle
         const dot =
           Math.cos(toLabel) * Math.cos(sideAngle) +
           Math.sin(toLabel) * Math.sin(sideAngle);
@@ -648,17 +656,13 @@ function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
       }
 
       // Connection line with text bounding box padding
-      const sizeMap = {
-        M: 0.3,
-        L: 0.4,
-        XL: 0.5,
-        XXL: 0.6,
-        "3XL": 0.7,
-        "4XL": 0.8,
-      };
-      const fontSize = sizeMap[task.fontSize] || sizeMap.M;
-      const weightMap = { light: 300, regular: 400, black: 900 };
-      const fontWeight = weightMap[task.fontWeight] || 400;
+      const sizeMap = { S: 0.22, M: 0.3, L: 0.4, XL: 0.5, XXL: 0.6, "3XL": 0.7, "4XL": 0.8 };
+      const typog = (settings.labelTypography || {})[task.fontSize] || {};
+      const fontSize = typog.fontSize ?? sizeMap[task.fontSize] ?? sizeMap.M;
+      const letterSpacing = typog.letterSpacing ?? 0;
+      const sizeWeight = typog.fontWeight ?? 400;
+      const weightMap = { light: 300, black: 900 };
+      const fontWeight = weightMap[task.fontWeight] ?? sizeWeight;
 
       const textLines = task.label.split("\n");
       const longestLine = textLines.reduce(
@@ -732,6 +736,7 @@ function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
           indicator.dataset.stepId = step.id;
           indicator.dataset.taskType = owner;
           indicator.dataset.taskIndex = index;
+          if (task.headingId) indicator.setAttribute("data-heading-id", task.headingId);
           addStepHover(indicator);
         }
       }
@@ -741,10 +746,12 @@ function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
       label.classList.add("label-text", "draggable-label");
       label.setAttribute("fill", settings.textColor);
       label.setAttribute("font-weight", fontWeight);
-      label.setAttribute("font-family", settings.fontFamily);
+      label.setAttribute("font-family", settings.fontFamily || "inherit");
+      label.setAttribute("letter-spacing", letterSpacing);
       label.dataset.stepId = step.id;
       label.dataset.taskType = owner;
       label.dataset.taskIndex = index;
+      if (task.headingId) label.setAttribute("data-heading-id", task.headingId);
 
       if (textLines.length > 1) {
         const yOffset = (-(textLines.length - 1) * fontSize * 1.2) / 2;
@@ -760,8 +767,15 @@ function renderStepOnCurve(svg, step, cx, cy, angle, phases, settings) {
     });
   };
 
-  renderTasks(step.preface, "preface");
-  renderTasks(step.client, "client");
+  // Unified descriptions (backward compat: merge preface + client)
+  const allDescs = [];
+  if (step.descriptions) {
+    allDescs.push(...(Array.isArray(step.descriptions) ? step.descriptions : [step.descriptions]));
+  } else {
+    if (step.preface) allDescs.push(...(Array.isArray(step.preface) ? step.preface : [step.preface]));
+    if (step.client) allDescs.push(...(Array.isArray(step.client) ? step.client : [step.client]));
+  }
+  if (allDescs.length) renderTasks(allDescs, "descriptions");
 }
 
 function renderVertical(container, steps, phases, settings) {
@@ -794,35 +808,31 @@ function renderVertical(container, steps, phases, settings) {
 
   const sorted = [...steps].sort((a, b) => b.size - a.size);
   sorted.forEach((step) => {
-    const prefaceArray = step.preface
-      ? Array.isArray(step.preface)
-        ? step.preface
-        : [step.preface]
-      : null;
-    const clientArray = step.client
-      ? Array.isArray(step.client)
-        ? step.client
-        : [step.client]
-      : null;
+    // Collect all descriptions (unified or legacy preface+client)
+    const rawDescs = [];
+    if (Array.isArray(step.descriptions)) {
+      rawDescs.push(...step.descriptions);
+    } else {
+      if (step.preface) rawDescs.push(...(Array.isArray(step.preface) ? step.preface : [step.preface]));
+      if (step.client) rawDescs.push(...(Array.isArray(step.client) ? step.client : [step.client]));
+    }
+
+    // Remap for vertical: lineY sign determines left (-) or right (+) of centerX
+    const vDescs = rawDescs.map((t) => ({
+      ...t,
+      lineX: t.lineY < 0
+        ? centerX - Math.abs(t.lineY) * verticalModifier
+        : centerX + Math.abs(t.lineY) * verticalModifier,
+      lineY: t.lineX,
+    }));
 
     const vStep = {
       ...step,
       x: centerX,
       y: step.x,
-      preface: prefaceArray
-        ? prefaceArray.map((t) => ({
-            ...t,
-            lineX: centerX - Math.abs(t.lineY) * verticalModifier,
-            lineY: t.lineX,
-          }))
-        : null,
-      client: clientArray
-        ? clientArray.map((t) => ({
-            ...t,
-            lineX: centerX + Math.abs(t.lineY) * verticalModifier,
-            lineY: t.lineX,
-          }))
-        : null,
+      descriptions: vDescs,
+      preface: undefined,
+      client: undefined,
     };
 
     renderStep(svg, vStep, centerX, true, phases, settings);

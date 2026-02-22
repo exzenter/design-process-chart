@@ -195,3 +195,44 @@
   text-transform: uppercase;
   fill: #333;
 }
+
+/* ===== PX MODE: override rem-based sizing with fixed px values ===== */
+/* Activated when usePxMode is true — adds class ppt-block--px-mode */
+.ppt-block--px-mode {
+  .ppt-controls {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .ppt-view-toggle {
+    gap: 4px;
+  }
+
+  .ppt-view-btn {
+    padding: 6px 13px;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+
+  .ppt-version-buttons {
+    gap: 4px;
+  }
+
+  .ppt-version-btn {
+    padding: 6px 13px;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+
+  .ppt-timeline-wrapper {
+    padding: 32px 0;
+  }
+
+  .ppt-timeline-wrapper--horizontal .ppt-svg {
+    min-width: 800px;
+  }
+
+  .ppt-timeline-wrapper--vertical .ppt-svg {
+    min-height: 800px;
+  }
+}

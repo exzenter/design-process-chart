@@ -35,14 +35,17 @@ function ppt_render_block( $attributes ) {
 
 	$show_toggle   = ! empty( $attributes['showViewToggle'] );
 	$show_versions = ! empty( $attributes['showVersionButtons'] );
+	$use_px_mode   = ! empty( $attributes['usePxMode'] );
 
 	$align_class = '';
 	if ( ! empty( $attributes['align'] ) ) {
 		$align_class = ' align' . esc_attr( $attributes['align'] );
 	}
 
+	$px_class = $use_px_mode ? ' ppt-block--px-mode' : '';
+
 	$wrapper_attrs = get_block_wrapper_attributes( array(
-		'class'            => 'ppt-block' . $align_class,
+		'class'            => 'ppt-block' . $align_class . $px_class,
 		'data-steps'       => $steps,
 		'data-phases'      => $phases,
 		'data-settings'    => $settings,

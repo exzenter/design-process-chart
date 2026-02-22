@@ -82,30 +82,30 @@
             </div>
           </div>
 
-          <!-- Preface Descriptions -->
+          <!-- Descriptions -->
           <div class="editor-section">
-            <h3>Preface Descriptions</h3>
+            <h3>Descriptions</h3>
+            <p style="font-size:0.8rem;color:#666;margin:0 0 8px">Line Y negative = above bubble, positive = below.</p>
 
-            <!-- Preface 1 -->
+            <!-- Description 1 -->
             <div class="setting-item checkbox-item">
               <label>
-                <input type="checkbox" id="edit-has-preface-1" />
-                Preface Description 1
+                <input type="checkbox" id="edit-has-desc-1" />
+                Description 1
               </label>
             </div>
 
-            <div id="preface-controls-1" style="display: none">
+            <div id="desc-controls-1" style="display: none">
               <div class="setting-item">
                 <label>Label</label>
                 <textarea
-                  id="edit-preface-label-1"
+                  id="edit-desc-label-1"
                   rows="3"
                   placeholder="Multi-line text (use Enter for new lines)"></textarea>
               </div>
-
               <div class="setting-item">
                 <label>Font Size</label>
-                <select id="edit-preface-size-1">
+                <select id="edit-desc-size-1">
                   <option value="M">M (Medium)</option>
                   <option value="L">L (Large)</option>
                   <option value="XL">XL</option>
@@ -114,69 +114,49 @@
                   <option value="4XL">4XL</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Font Weight</label>
-                <select id="edit-preface-weight-1">
+                <select id="edit-desc-weight-1">
                   <option value="light">Light</option>
                   <option value="regular">Regular</option>
                   <option value="black">Black</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Line X</label>
-                <input
-                  type="number"
-                  id="edit-preface-lineX-1"
-                  step="0.5"
-                  min="0"
-                  max="50" />
+                <input type="number" id="edit-desc-lineX-1" step="0.5" min="0" max="50" />
               </div>
-
               <div class="setting-item">
                 <label>Line Y</label>
-                <input
-                  type="number"
-                  id="edit-preface-lineY-1"
-                  step="0.5"
-                  min="-15"
-                  max="0" />
-                <span class="help-text">Negative = above timeline</span>
+                <input type="number" id="edit-desc-lineY-1" step="0.5" min="-15" max="15" />
+                <span class="help-text">− above / + below</span>
               </div>
-
               <div class="setting-item">
                 <label>Anchor</label>
-                <input
-                  type="number"
-                  id="edit-preface-anchor-1"
-                  step="0.1"
-                  min="-1"
-                  max="1" />
+                <input type="number" id="edit-desc-anchor-1" step="0.1" min="-1" max="1" />
                 <span class="help-text">-1 (left) to 1 (right)</span>
               </div>
             </div>
 
-            <!-- Preface 2 -->
+            <!-- Description 2 -->
             <div class="setting-item checkbox-item">
               <label>
-                <input type="checkbox" id="edit-has-preface-2" />
-                Preface Description 2
+                <input type="checkbox" id="edit-has-desc-2" />
+                Description 2
               </label>
             </div>
 
-            <div id="preface-controls-2" style="display: none">
+            <div id="desc-controls-2" style="display: none">
               <div class="setting-item">
                 <label>Label</label>
                 <textarea
-                  id="edit-preface-label-2"
+                  id="edit-desc-label-2"
                   rows="3"
                   placeholder="Multi-line text (use Enter for new lines)"></textarea>
               </div>
-
               <div class="setting-item">
                 <label>Font Size</label>
-                <select id="edit-preface-size-2">
+                <select id="edit-desc-size-2">
                   <option value="M">M (Medium)</option>
                   <option value="L">L (Large)</option>
                   <option value="XL">XL</option>
@@ -185,69 +165,49 @@
                   <option value="4XL">4XL</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Font Weight</label>
-                <select id="edit-preface-weight-2">
+                <select id="edit-desc-weight-2">
                   <option value="light">Light</option>
                   <option value="regular">Regular</option>
                   <option value="black">Black</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Line X</label>
-                <input
-                  type="number"
-                  id="edit-preface-lineX-2"
-                  step="0.5"
-                  min="0"
-                  max="50" />
+                <input type="number" id="edit-desc-lineX-2" step="0.5" min="0" max="50" />
               </div>
-
               <div class="setting-item">
                 <label>Line Y</label>
-                <input
-                  type="number"
-                  id="edit-preface-lineY-2"
-                  step="0.5"
-                  min="-15"
-                  max="0" />
-                <span class="help-text">Negative = above timeline</span>
+                <input type="number" id="edit-desc-lineY-2" step="0.5" min="-15" max="15" />
+                <span class="help-text">− above / + below</span>
               </div>
-
               <div class="setting-item">
                 <label>Anchor</label>
-                <input
-                  type="number"
-                  id="edit-preface-anchor-2"
-                  step="0.1"
-                  min="-1"
-                  max="1" />
+                <input type="number" id="edit-desc-anchor-2" step="0.1" min="-1" max="1" />
                 <span class="help-text">-1 (left) to 1 (right)</span>
               </div>
             </div>
 
-            <!-- Preface 3 -->
+            <!-- Description 3 -->
             <div class="setting-item checkbox-item">
               <label>
-                <input type="checkbox" id="edit-has-preface-3" />
-                Preface Description 3
+                <input type="checkbox" id="edit-has-desc-3" />
+                Description 3
               </label>
             </div>
 
-            <div id="preface-controls-3" style="display: none">
+            <div id="desc-controls-3" style="display: none">
               <div class="setting-item">
                 <label>Label</label>
                 <textarea
-                  id="edit-preface-label-3"
+                  id="edit-desc-label-3"
                   rows="3"
                   placeholder="Multi-line text (use Enter for new lines)"></textarea>
               </div>
-
               <div class="setting-item">
                 <label>Font Size</label>
-                <select id="edit-preface-size-3">
+                <select id="edit-desc-size-3">
                   <option value="M">M (Medium)</option>
                   <option value="L">L (Large)</option>
                   <option value="XL">XL</option>
@@ -256,145 +216,49 @@
                   <option value="4XL">4XL</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Font Weight</label>
-                <select id="edit-preface-weight-3">
+                <select id="edit-desc-weight-3">
                   <option value="light">Light</option>
                   <option value="regular">Regular</option>
                   <option value="black">Black</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Line X</label>
-                <input
-                  type="number"
-                  id="edit-preface-lineX-3"
-                  step="0.5"
-                  min="0"
-                  max="50" />
+                <input type="number" id="edit-desc-lineX-3" step="0.5" min="0" max="50" />
               </div>
-
               <div class="setting-item">
                 <label>Line Y</label>
-                <input
-                  type="number"
-                  id="edit-preface-lineY-3"
-                  step="0.5"
-                  min="-15"
-                  max="0" />
-                <span class="help-text">Negative = above timeline</span>
+                <input type="number" id="edit-desc-lineY-3" step="0.5" min="-15" max="15" />
+                <span class="help-text">− above / + below</span>
               </div>
-
               <div class="setting-item">
                 <label>Anchor</label>
-                <input
-                  type="number"
-                  id="edit-preface-anchor-3"
-                  step="0.1"
-                  min="-1"
-                  max="1" />
-                <span class="help-text">-1 (left) to 1 (right)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Client Descriptions -->
-          <div class="editor-section">
-            <h3>Client Descriptions</h3>
-
-            <!-- Client 1 -->
-            <div class="setting-item checkbox-item">
-              <label>
-                <input type="checkbox" id="edit-has-client-1" />
-                Client Description 1
-              </label>
-            </div>
-
-            <div id="client-controls-1" style="display: none">
-              <div class="setting-item">
-                <label>Label</label>
-                <textarea
-                  id="edit-client-label-1"
-                  rows="3"
-                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
-              </div>
-
-              <div class="setting-item">
-                <label>Font Size</label>
-                <select id="edit-client-size-1">
-                  <option value="M">M (Medium)</option>
-                  <option value="L">L (Large)</option>
-                  <option value="XL">XL</option>
-                  <option value="XXL">XXL</option>
-                  <option value="3XL">3XL</option>
-                  <option value="4XL">4XL</option>
-                </select>
-              </div>
-
-              <div class="setting-item">
-                <label>Font Weight</label>
-                <select id="edit-client-weight-1">
-                  <option value="light">Light</option>
-                  <option value="regular">Regular</option>
-                  <option value="black">Black</option>
-                </select>
-              </div>
-
-              <div class="setting-item">
-                <label>Line X</label>
-                <input
-                  type="number"
-                  id="edit-client-lineX-1"
-                  step="0.5"
-                  min="0"
-                  max="50" />
-              </div>
-
-              <div class="setting-item">
-                <label>Line Y</label>
-                <input
-                  type="number"
-                  id="edit-client-lineY-1"
-                  step="0.5"
-                  min="0"
-                  max="15" />
-                <span class="help-text">Positive = below timeline</span>
-              </div>
-
-              <div class="setting-item">
-                <label>Anchor</label>
-                <input
-                  type="number"
-                  id="edit-client-anchor-1"
-                  step="0.1"
-                  min="-1"
-                  max="1" />
+                <input type="number" id="edit-desc-anchor-3" step="0.1" min="-1" max="1" />
                 <span class="help-text">-1 (left) to 1 (right)</span>
               </div>
             </div>
 
-            <!-- Client 2 -->
+            <!-- Description 4 -->
             <div class="setting-item checkbox-item">
               <label>
-                <input type="checkbox" id="edit-has-client-2" />
-                Client Description 2
+                <input type="checkbox" id="edit-has-desc-4" />
+                Description 4
               </label>
             </div>
 
-            <div id="client-controls-2" style="display: none">
+            <div id="desc-controls-4" style="display: none">
               <div class="setting-item">
                 <label>Label</label>
                 <textarea
-                  id="edit-client-label-2"
+                  id="edit-desc-label-4"
                   rows="3"
                   placeholder="Multi-line text (use Enter for new lines)"></textarea>
               </div>
-
               <div class="setting-item">
                 <label>Font Size</label>
-                <select id="edit-client-size-2">
+                <select id="edit-desc-size-4">
                   <option value="M">M (Medium)</option>
                   <option value="L">L (Large)</option>
                   <option value="XL">XL</option>
@@ -403,69 +267,49 @@
                   <option value="4XL">4XL</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Font Weight</label>
-                <select id="edit-client-weight-2">
+                <select id="edit-desc-weight-4">
                   <option value="light">Light</option>
                   <option value="regular">Regular</option>
                   <option value="black">Black</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Line X</label>
-                <input
-                  type="number"
-                  id="edit-client-lineX-2"
-                  step="0.5"
-                  min="0"
-                  max="50" />
+                <input type="number" id="edit-desc-lineX-4" step="0.5" min="0" max="50" />
               </div>
-
               <div class="setting-item">
                 <label>Line Y</label>
-                <input
-                  type="number"
-                  id="edit-client-lineY-2"
-                  step="0.5"
-                  min="0"
-                  max="15" />
-                <span class="help-text">Positive = below timeline</span>
+                <input type="number" id="edit-desc-lineY-4" step="0.5" min="-15" max="15" />
+                <span class="help-text">− above / + below</span>
               </div>
-
               <div class="setting-item">
                 <label>Anchor</label>
-                <input
-                  type="number"
-                  id="edit-client-anchor-2"
-                  step="0.1"
-                  min="-1"
-                  max="1" />
+                <input type="number" id="edit-desc-anchor-4" step="0.1" min="-1" max="1" />
                 <span class="help-text">-1 (left) to 1 (right)</span>
               </div>
             </div>
 
-            <!-- Client 3 -->
+            <!-- Description 5 -->
             <div class="setting-item checkbox-item">
               <label>
-                <input type="checkbox" id="edit-has-client-3" />
-                Client Description 3
+                <input type="checkbox" id="edit-has-desc-5" />
+                Description 5
               </label>
             </div>
 
-            <div id="client-controls-3" style="display: none">
+            <div id="desc-controls-5" style="display: none">
               <div class="setting-item">
                 <label>Label</label>
                 <textarea
-                  id="edit-client-label-3"
+                  id="edit-desc-label-5"
                   rows="3"
                   placeholder="Multi-line text (use Enter for new lines)"></textarea>
               </div>
-
               <div class="setting-item">
                 <label>Font Size</label>
-                <select id="edit-client-size-3">
+                <select id="edit-desc-size-5">
                   <option value="M">M (Medium)</option>
                   <option value="L">L (Large)</option>
                   <option value="XL">XL</option>
@@ -474,45 +318,77 @@
                   <option value="4XL">4XL</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Font Weight</label>
-                <select id="edit-client-weight-3">
+                <select id="edit-desc-weight-5">
                   <option value="light">Light</option>
                   <option value="regular">Regular</option>
                   <option value="black">Black</option>
                 </select>
               </div>
-
               <div class="setting-item">
                 <label>Line X</label>
-                <input
-                  type="number"
-                  id="edit-client-lineX-3"
-                  step="0.5"
-                  min="0"
-                  max="50" />
+                <input type="number" id="edit-desc-lineX-5" step="0.5" min="0" max="50" />
               </div>
-
               <div class="setting-item">
                 <label>Line Y</label>
-                <input
-                  type="number"
-                  id="edit-client-lineY-3"
-                  step="0.5"
-                  min="0"
-                  max="15" />
-                <span class="help-text">Positive = below timeline</span>
+                <input type="number" id="edit-desc-lineY-5" step="0.5" min="-15" max="15" />
+                <span class="help-text">− above / + below</span>
               </div>
-
               <div class="setting-item">
                 <label>Anchor</label>
-                <input
-                  type="number"
-                  id="edit-client-anchor-3"
-                  step="0.1"
-                  min="-1"
-                  max="1" />
+                <input type="number" id="edit-desc-anchor-5" step="0.1" min="-1" max="1" />
+                <span class="help-text">-1 (left) to 1 (right)</span>
+              </div>
+            </div>
+
+            <!-- Description 6 -->
+            <div class="setting-item checkbox-item">
+              <label>
+                <input type="checkbox" id="edit-has-desc-6" />
+                Description 6
+              </label>
+            </div>
+
+            <div id="desc-controls-6" style="display: none">
+              <div class="setting-item">
+                <label>Label</label>
+                <textarea
+                  id="edit-desc-label-6"
+                  rows="3"
+                  placeholder="Multi-line text (use Enter for new lines)"></textarea>
+              </div>
+              <div class="setting-item">
+                <label>Font Size</label>
+                <select id="edit-desc-size-6">
+                  <option value="M">M (Medium)</option>
+                  <option value="L">L (Large)</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="3XL">3XL</option>
+                  <option value="4XL">4XL</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label>Font Weight</label>
+                <select id="edit-desc-weight-6">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="black">Black</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label>Line X</label>
+                <input type="number" id="edit-desc-lineX-6" step="0.5" min="0" max="50" />
+              </div>
+              <div class="setting-item">
+                <label>Line Y</label>
+                <input type="number" id="edit-desc-lineY-6" step="0.5" min="-15" max="15" />
+                <span class="help-text">− above / + below</span>
+              </div>
+              <div class="setting-item">
+                <label>Anchor</label>
+                <input type="number" id="edit-desc-anchor-6" step="0.1" min="-1" max="1" />
                 <span class="help-text">-1 (left) to 1 (right)</span>
               </div>
             </div>

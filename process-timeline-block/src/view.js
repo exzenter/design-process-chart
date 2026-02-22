@@ -154,10 +154,10 @@ function playEntryAnimation(container, settings, viewMode) {
         const matchIdx = indicatorEls.findIndex(
           (ind) =>
             ind.dataset.stepId +
-              "_" +
-              ind.dataset.taskType +
-              "_" +
-              ind.dataset.taskIndex ===
+            "_" +
+            ind.dataset.taskType +
+            "_" +
+            ind.dataset.taskIndex ===
             key,
         );
         const delay = (matchIdx >= 0 ? matchIdx : 0) * indicatorStagger;
@@ -705,6 +705,50 @@ function initBlock(block) {
         );
       }
     }, 150);
+  });
+
+  // Smooth-scroll to heading when clicking a bubble/label/indicator with data-heading-id
+  container.addEventListener("click", (e) => {
+    const target = e.target.closest("[data-heading-id]");
+    if (!target) return;
+    const headingId = target.getAttribute("data-heading-id");
+    console.log("PPT: Clicked element with headingId:", headingId);
+    if (!headingId) return;
+
+    // First try an element with that exact id
+    let heading = document.getElementById(headingId);
+    if (heading) {
+      console.log("PPT: Found heading by ID:", heading);
+    }
+
+    // Fallback: find a heading whose text slug matches
+    if (!heading) {
+      console.log("PPT: Heading not found by ID, trying slug matching...");
+      const slugify = (t) =>
+        t
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, "")
+          .replace(/[\s_-]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+      const allHeadings = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+      heading = allHeadings.find((h) => {
+        const slug = slugify(h.textContent.trim());
+        return slug === headingId;
+      });
+
+      if (heading) {
+        console.log("PPT: Found heading by slug matching:", heading);
+      } else {
+        console.log("PPT: No matching heading found on page.");
+      }
+    }
+
+    if (heading) {
+      console.log("PPT: Scrolling to heading...");
+      heading.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   });
 
   // Expose API for external JS

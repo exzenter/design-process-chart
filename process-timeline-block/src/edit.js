@@ -26,13 +26,16 @@ import { renderTimeline } from "./timeline-renderer";
 import {
   DEFAULT_STEPS,
   DEFAULT_PHASES,
+  DEFAULT_PHASE_ORDER,
   DEFAULT_SETTINGS,
+  generatePhaseKey,
 } from "./default-data";
 
 export default function Edit({ attributes, setAttributes }) {
   const {
     timelineSteps,
     phases,
+    phaseOrder: phaseOrderAttr,
     settings,
     versions,
     activeVersion,
@@ -41,9 +44,18 @@ export default function Edit({ attributes, setAttributes }) {
     desktopLayout,
     showViewToggle,
     showVersionButtons,
+    usePxMode,
   } = attributes;
 
-  const blockProps = useBlockProps({ className: "ppt-block ppt-editor" });
+  // Ordered list of phase keys – fall back to DEFAULT_PHASE_ORDER if not yet stored
+  const phaseOrder =
+    phaseOrderAttr && phaseOrderAttr.length > 0
+      ? phaseOrderAttr
+      : Object.keys(phases && Object.keys(phases).length ? phases : DEFAULT_PHASES);
+
+  const blockProps = useBlockProps({
+    className: `ppt-block ppt-editor${usePxMode ? " ppt-block--px-mode" : ""}`,
+  });
   const containerRef = useRef();
   const [previewMode, setPreviewMode] = useState("horizontal");
   const [selectedBubble, setSelectedBubble] = useState("");
@@ -71,7 +83,13 @@ export default function Edit({ attributes, setAttributes }) {
       setAttributes({
         timelineSteps: JSON.parse(JSON.stringify(DEFAULT_STEPS)),
         phases: JSON.parse(JSON.stringify(DEFAULT_PHASES)),
+        phaseOrder: [...DEFAULT_PHASE_ORDER],
         settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
+      });
+    } else if (!phaseOrderAttr || phaseOrderAttr.length === 0) {
+      // Migrate existing blocks: derive order from current phases
+      setAttributes({
+        phaseOrder: Object.keys(phases && Object.keys(phases).length ? phases : DEFAULT_PHASES),
       });
     }
   }, []);
@@ -290,8 +308,7 @@ export default function Edit({ attributes, setAttributes }) {
             });
             return {
               ...s,
-              [dragStateRef.current.taskType]:
-                updatedTasks.length === 1 ? updatedTasks[0] : updatedTasks,
+              [dragStateRef.current.taskType]: updatedTasks,
             };
           }
           return s;
@@ -316,8 +333,7 @@ export default function Edit({ attributes, setAttributes }) {
             });
             return {
               ...s,
-              [dragStateRef.current.taskType]:
-                updatedTasks.length === 1 ? updatedTasks[0] : updatedTasks,
+              [dragStateRef.current.taskType]: updatedTasks,
             };
           }
           return s;
@@ -368,6 +384,100 @@ export default function Edit({ attributes, setAttributes }) {
     setAttributes({ settings: { ...settings, colors: newColors } });
   };
 
+  // ── Phase Manager helpers ──────────────────────────────────────────
+  const MAX_PHASES = 20;
+
+  const addPhase = () => {
+    if (phaseOrder.length >= MAX_PHASES) return;
+    const key = generatePhaseKey();
+    const newPhases = { ...(phases || {}), [key]: { name: "NEW PHASE", color: "#aaaaaa" } };
+    const newOrder = [...phaseOrder, key];
+    const newColors = { ...(settings?.colors || {}), [key]: "#aaaaaa" };
+    setAttributes({
+      phases: newPhases,
+      phaseOrder: newOrder,
+      settings: { ...settings, colors: newColors },
+    });
+  };
+
+  const deletePhase = (key) => {
+    if (phaseOrder.length <= 1) return; // keep at least 1
+    const newPhases = { ...(phases || {}) };
+    delete newPhases[key];
+    const newOrder = phaseOrder.filter((k) => k !== key);
+    const fallback = newOrder[0];
+    // Reassign steps that used the deleted phase
+    const newSteps = (timelineSteps || []).map((s) =>
+      s.phase === key ? { ...s, phase: fallback } : s
+    );
+    const newColors = { ...(settings?.colors || {}) };
+    delete newColors[key];
+    setAttributes({
+      phases: newPhases,
+      phaseOrder: newOrder,
+      timelineSteps: newSteps,
+      settings: { ...settings, colors: newColors },
+    });
+    if (selectedBubble) {
+      const sel = (timelineSteps || []).find((s) => s.id === selectedBubble);
+      if (sel && sel.phase === key) {
+        // force re-render via no-op; state already updated
+      }
+    }
+  };
+
+  const updatePhaseName = (key, name) => {
+    const newPhases = {
+      ...(phases || {}),
+      [key]: { ...(phases || {})[key], name },
+    };
+    setAttributes({ phases: newPhases });
+  };
+
+  const updatePhaseColor = (key, color) => {
+    const newPhases = {
+      ...(phases || {}),
+      [key]: { ...(phases || {})[key], color },
+    };
+    const newColors = { ...(settings?.colors || {}), [key]: color };
+    setAttributes({
+      phases: newPhases,
+      settings: { ...settings, colors: newColors },
+    });
+  };
+
+  const movePhase = (key, direction) => {
+    const idx = phaseOrder.indexOf(key);
+    if (idx < 0) return;
+    const newOrder = [...phaseOrder];
+    if (direction === "up" && idx > 0) {
+      [newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]];
+    } else if (direction === "down" && idx < newOrder.length - 1) {
+      [newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]];
+    }
+    setAttributes({ phaseOrder: newOrder });
+  };
+  // ──────────────────────────────────────────────────────────────────
+
+  const LABEL_SIZE_DEFAULTS = {
+    S: { fontSize: 0.22, letterSpacing: 0, fontWeight: 400 },
+    M: { fontSize: 0.30, letterSpacing: 0, fontWeight: 400 },
+    L: { fontSize: 0.40, letterSpacing: 0, fontWeight: 400 },
+    XL: { fontSize: 0.50, letterSpacing: 0, fontWeight: 400 },
+    XXL: { fontSize: 0.60, letterSpacing: 0, fontWeight: 400 },
+    "3XL": { fontSize: 0.70, letterSpacing: 0, fontWeight: 400 },
+    "4XL": { fontSize: 0.80, letterSpacing: 0, fontWeight: 400 },
+  };
+
+  const updateLabelTypography = (sizeKey, field, value) => {
+    const current = settings?.labelTypography || {};
+    const existing = { ...LABEL_SIZE_DEFAULTS[sizeKey], ...(current[sizeKey] || {}) };
+    updateSetting("labelTypography", {
+      ...current,
+      [sizeKey]: { ...existing, [field]: value },
+    });
+  };
+
   const getStep = () => {
     if (!selectedBubble) return null;
     return (timelineSteps || []).find((s) => s.id === selectedBubble);
@@ -388,7 +498,7 @@ export default function Edit({ attributes, setAttributes }) {
     }, 0);
     const newId = `step-${maxNum + 1}`;
     const newX = steps.length > 0 ? Math.max(...steps.map((s) => s.x)) + 2 : 2;
-    const newStep = { id: newId, phase: "contact", x: newX, size: 2 };
+    const newStep = { id: newId, phase: phaseOrder[0] || "contact", x: newX, size: 2 };
     setAttributes({ timelineSteps: [...steps, newStep] });
     setSelectedBubble(newId);
   };
@@ -476,8 +586,184 @@ export default function Edit({ attributes, setAttributes }) {
     URL.revokeObjectURL(url);
   };
 
+  // Build a URL-safe slug from any string
+  const toSlug = (text) =>
+    text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  // Colour palette for auto-generated phases
+  const HEADING_PALETTE = [
+    "#e63946",
+    "#f4a261",
+    "#e9c46a",
+    "#8ac926",
+    "#43aa8b",
+    "#4895ef",
+    "#e879a0",
+    "#9b5de5",
+    "#f15bb5",
+    "#00bbf9",
+  ];
+
+  const importFromHeadings = () => {
+    // Try the editor iframe first, fall back to main document
+    const editorDoc =
+      document.querySelector(".editor-canvas__iframe")?.contentDocument ||
+      document.querySelector("iframe[name='editor-canvas']")?.contentDocument ||
+      document;
+
+    const rawHeadings = Array.from(
+      editorDoc.querySelectorAll(
+        ".is-root-container h2, .is-root-container h3, .is-root-container h4, .is-root-container h5, .is-root-container h6," +
+        ".editor-styles-wrapper h2, .editor-styles-wrapper h3, .editor-styles-wrapper h4, .editor-styles-wrapper h5, .editor-styles-wrapper h6",
+      ),
+    );
+
+    const validHeadings = rawHeadings.filter(el => el.textContent.trim());
+
+    if (validHeadings.length === 0) {
+      // eslint-disable-next-line no-alert
+      window.alert("Keine H2–H6 Überschriften auf dieser Seite gefunden.");
+      return;
+    }
+
+    const totalHeadings = validHeadings.length;
+    const rangeStart = 2; // Margin from left
+    const rangeEnd = 48;   // Margin from right
+    const spacing = totalHeadings > 1 ? (rangeEnd - rangeStart) / (totalHeadings - 1) : 0;
+
+    const newPhases = {};
+    const newOrder = [];
+    const newColors = {};
+    const newSteps = [];
+    let paletteIdx = 0;
+    let currentPhaseKey = null;
+
+    validHeadings.forEach((el, index) => {
+      const level = parseInt(el.tagName[1], 10); // 2…6
+      const text = el.textContent.trim();
+
+      const xPos = totalHeadings > 1 ? rangeStart + (index * spacing) : 25;
+      const roundedX = Math.round(xPos * 10) / 10;
+
+      // Determine heading id for smooth-scroll
+      const effectiveId = (el.id && !el.id.startsWith("block-")) ? el.id : null;
+      const headingId = effectiveId || toSlug(text) || `heading-${index + 1}`;
+
+      if (level === 2) {
+        // New phase
+        const phaseKey = toSlug(text) || `phase-${Date.now()}-${paletteIdx}`;
+        const color = HEADING_PALETTE[paletteIdx % HEADING_PALETTE.length];
+        paletteIdx++;
+
+        newPhases[phaseKey] = { name: text.toUpperCase(), color };
+        newOrder.push(phaseKey);
+        newColors[phaseKey] = color;
+        currentPhaseKey = phaseKey;
+
+        // H2 → large phase bubble
+        newSteps.push({
+          id: `step-${index + 1}`,
+          phase: phaseKey,
+          x: roundedX,
+          size: 60,
+          headingId,
+          descriptions: [
+            {
+              label: text,
+              fontSize: "XL",
+              fontWeight: "black",
+              lineX: roundedX,
+              lineY: -9,
+              anchor: 0,
+              headingId,
+            },
+          ],
+        });
+      } else {
+        // H3–H6 → smaller step in current phase
+        if (!currentPhaseKey) {
+          // No H2 parent yet – create a default phase
+          const phaseKey = "intro";
+          if (!newPhases[phaseKey]) {
+            const color = HEADING_PALETTE[paletteIdx % HEADING_PALETTE.length];
+            paletteIdx++;
+            newPhases[phaseKey] = { name: "INTRO", color };
+            newOrder.push(phaseKey);
+            newColors[phaseKey] = color;
+          }
+          currentPhaseKey = phaseKey;
+        }
+
+        const sizeByLevel = { 3: 30, 4: 18, 5: 12, 6: 8 };
+        const fontByLevel = { 3: "L", 4: "M", 5: "S", 6: "S" };
+        const bubbleSize = sizeByLevel[level] || 15;
+        const fontSize = fontByLevel[level] || "S";
+
+        const lineY = (index + 1) % 2 === 0 ? 8 : -8; // alternate above/below
+        newSteps.push({
+          id: `step-${index + 1}`,
+          phase: currentPhaseKey,
+          x: roundedX,
+          size: bubbleSize,
+          headingId,
+          descriptions: [
+            {
+              label: text,
+              fontSize,
+              fontWeight: "regular",
+              lineX: roundedX,
+              lineY,
+              anchor: 0,
+              headingId,
+            },
+          ],
+        });
+      }
+    });
+
+    if (newSteps.length === 0) {
+      // eslint-disable-next-line no-alert
+      window.alert("Keine verwertbaren Überschriften gefunden.");
+      return;
+    }
+
+    // Apply the new data and save as a version
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const versionName = `Headings – ${dd}.${mm}.${yyyy}`;
+
+    // Temporarily update attributes, then save version
+    const newVersionData = {
+      steps: JSON.parse(JSON.stringify(newSteps)),
+      settings: JSON.parse(JSON.stringify(settings)),
+      phases: JSON.parse(JSON.stringify(newPhases)),
+      phaseOrder: [...newOrder],
+      savedAt: new Date().toISOString(),
+    };
+
+    const newVersions = {
+      ...(versions || {}),
+      [versionName]: newVersionData,
+    };
+
+    setAttributes({
+      timelineSteps: newSteps,
+      phases: newPhases,
+      phaseOrder: newOrder,
+      settings: { ...settings, colors: newColors },
+      versions: newVersions,
+      activeVersion: versionName,
+    });
+  };
+
   const currentStep = getStep();
-  const phaseKeys = Object.keys(phases || DEFAULT_PHASES);
 
   return (
     <div {...blockProps}>
@@ -520,6 +806,12 @@ export default function Edit({ attributes, setAttributes }) {
             checked={showVersionButtons}
             onChange={(val) => setAttributes({ showVersionButtons: val })}
           />
+          <ToggleControl
+            label="Use Fixed PX Sizing"
+            help="Switch all rem-based layout sizes to fixed px values. Enable this on sites that don't use a standard rem scale."
+            checked={!!usePxMode}
+            onChange={(val) => setAttributes({ usePxMode: val })}
+          />
           <RangeControl
             label="Horizontal Max Width (px)"
             help="0 = no limit. Constrains the timeline width in horizontal mode."
@@ -544,7 +836,7 @@ export default function Edit({ attributes, setAttributes }) {
             value={settings?.cropTop ?? 0}
             onChange={(val) => updateSetting("cropTop", val)}
             min={0}
-            max={45}
+            max={65}
             step={1}
           />
           <RangeControl
@@ -553,7 +845,7 @@ export default function Edit({ attributes, setAttributes }) {
             value={settings?.cropBottom ?? 0}
             onChange={(val) => updateSetting("cropBottom", val)}
             min={0}
-            max={45}
+            max={65}
             step={1}
           />
           <RangeControl
@@ -576,37 +868,97 @@ export default function Edit({ attributes, setAttributes }) {
           />
         </PanelBody>
 
-        {/* ===== BUBBLE COLORS ===== */}
-        <PanelBody title="Bubble Colors" initialOpen={false}>
-          {phaseKeys.map((key) => (
-            <BaseControl
-              key={key}
-              label={(phases || DEFAULT_PHASES)[key]?.name || key}>
-              <PanelRow>
-                <ColorIndicator
-                  colorValue={settings?.colors?.[key] || "#ccc"}
-                />
-                <Dropdown
-                  renderToggle={({ isOpen, onToggle }) => (
-                    <Button
-                      onClick={onToggle}
-                      aria-expanded={isOpen}
-                      variant="secondary"
-                      size="small">
-                      Change
-                    </Button>
-                  )}
-                  renderContent={() => (
-                    <ColorPicker
-                      color={settings?.colors?.[key] || "#ccc"}
-                      onChange={(c) => updateColor(key, c)}
-                    />
-                  )}
-                />
-              </PanelRow>
-            </BaseControl>
-          ))}
+        {/* ===== PHASE MANAGER ===== */}
+        <PanelBody title="Phase Manager" initialOpen={false}>
+          <p style={{ fontSize: "11px", color: "#666", margin: "0 0 8px" }}>
+            {phaseOrder.length} / {MAX_PHASES} Phasen
+          </p>
+          {phaseOrder.map((key, idx) => {
+            const ph = (phases || DEFAULT_PHASES)[key] || { name: key, color: "#cccccc" };
+            const phColor = (settings?.colors?.[key]) || ph.color || "#cccccc";
+            return (
+              <div
+                key={key}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                  padding: "8px",
+                  marginBottom: "8px",
+                  background: "#f6f7f7",
+                  borderRadius: "4px",
+                  border: "1px solid #e0e0e0",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <ColorIndicator colorValue={phColor} />
+                  <TextControl
+                    value={ph.name}
+                    onChange={(val) => updatePhaseName(key, val)}
+                    style={{ flex: 1, margin: 0 }}
+                  />
+                  <Dropdown
+                    renderToggle={({ isOpen, onToggle }) => (
+                      <Button
+                        onClick={onToggle}
+                        aria-expanded={isOpen}
+                        variant="secondary"
+                        size="small">
+                        Farbe
+                      </Button>
+                    )}
+                    renderContent={() => (
+                      <ColorPicker
+                        color={phColor}
+                        onChange={(c) => updatePhaseColor(key, c)}
+                      />
+                    )}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                  <Button
+                    size="small"
+                    variant="tertiary"
+                    disabled={idx === 0}
+                    onClick={() => movePhase(key, "up")}
+                    aria-label="Nach oben">
+                    ↑
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="tertiary"
+                    disabled={idx === phaseOrder.length - 1}
+                    onClick={() => movePhase(key, "down")}
+                    aria-label="Nach unten">
+                    ↓
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="tertiary"
+                    isDestructive
+                    disabled={phaseOrder.length <= 1}
+                    onClick={() => {
+                      // eslint-disable-next-line no-alert
+                      if (window.confirm(`Phase "${ph.name}" löschen?`)) {
+                        deletePhase(key);
+                      }
+                    }}
+                    aria-label="Phase löschen">
+                    ✕
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+          <Button
+            variant="secondary"
+            onClick={addPhase}
+            disabled={phaseOrder.length >= MAX_PHASES}
+            style={{ width: "100%" }}>
+            + Phase hinzufügen
+          </Button>
         </PanelBody>
+
 
         {/* ===== TIMELINE LINE ===== */}
         <PanelBody title="Timeline Line" initialOpen={false}>
@@ -636,9 +988,9 @@ export default function Edit({ attributes, setAttributes }) {
           </BaseControl>
           <RangeControl
             label="Line Width"
-            value={settings?.timelineWidth || 0.18}
+            value={settings?.timelineWidth ?? 0.18}
             onChange={(val) => updateSetting("timelineWidth", val)}
-            min={0.01}
+            min={0}
             max={0.5}
             step={0.01}
           />
@@ -685,11 +1037,11 @@ export default function Edit({ attributes, setAttributes }) {
                       pts.length === 4
                         ? pts
                         : [
-                            { x: 0, y: 0.5 },
-                            { x: 0.33, y: 0.3 },
-                            { x: 0.67, y: 0.7 },
-                            { x: 1, y: 0.5 },
-                          ];
+                          { x: 0, y: 0.5 },
+                          { x: 0.33, y: 0.3 },
+                          { x: 0.67, y: 0.7 },
+                          { x: 1, y: 0.5 },
+                        ];
                     const pointLabels = [
                       "Start",
                       "Control 1",
@@ -750,13 +1102,10 @@ export default function Edit({ attributes, setAttributes }) {
 
                           {/* Cubic bezier curve */}
                           <path
-                            d={`M ${safePts[0].x * 100} ${
-                              safePts[0].y * 50
-                            } C ${safePts[1].x * 100} ${safePts[1].y * 50}, ${
-                              safePts[2].x * 100
-                            } ${safePts[2].y * 50}, ${safePts[3].x * 100} ${
-                              safePts[3].y * 50
-                            }`}
+                            d={`M ${safePts[0].x * 100} ${safePts[0].y * 50
+                              } C ${safePts[1].x * 100} ${safePts[1].y * 50}, ${safePts[2].x * 100
+                              } ${safePts[2].y * 50}, ${safePts[3].x * 100} ${safePts[3].y * 50
+                              }`}
                             stroke={settings?.timelineColor || "#333"}
                             strokeWidth="2"
                             fill="none"
@@ -1100,6 +1449,71 @@ export default function Edit({ attributes, setAttributes }) {
           />
         </PanelBody>
 
+        {/* ===== LABEL TYPOGRAPHY ===== */}
+        <PanelBody title="Label Typography" initialOpen={false}>
+          {Object.keys(LABEL_SIZE_DEFAULTS).map((sizeKey) => {
+            const typog = {
+              ...LABEL_SIZE_DEFAULTS[sizeKey],
+              ...(settings?.labelTypography?.[sizeKey] || {}),
+            };
+            return (
+              <div
+                key={sizeKey}
+                style={{
+                  borderBottom: "1px solid #e0e0e0",
+                  paddingBottom: "10px",
+                  marginBottom: "10px",
+                }}>
+                <div
+                  style={{
+                    fontWeight: "600",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#1e1e1e",
+                    marginBottom: "6px",
+                  }}>
+                  Size: {sizeKey}
+                </div>
+                <RangeControl
+                  label="Font Size"
+                  value={typog.fontSize}
+                  onChange={(v) =>
+                    updateLabelTypography(sizeKey, "fontSize", v)
+                  }
+                  min={0.05}
+                  max={1.5}
+                  step={0.01}
+                />
+                <RangeControl
+                  label="Letter Spacing"
+                  value={typog.letterSpacing}
+                  onChange={(v) =>
+                    updateLabelTypography(sizeKey, "letterSpacing", v)
+                  }
+                  min={-0.05}
+                  max={0.15}
+                  step={0.005}
+                />
+                <RangeControl
+                  label="Font Weight"
+                  value={typog.fontWeight}
+                  onChange={(v) =>
+                    updateLabelTypography(sizeKey, "fontWeight", v)
+                  }
+                  min={100}
+                  max={900}
+                  step={100}
+                />
+              </div>
+            );
+          })}
+          <p style={{ fontSize: "11px", color: "#757575", marginTop: "4px" }}>
+            Note: per-label <em>light</em> (300) and <em>black</em> (900)
+            weights override the Font Weight here.
+          </p>
+        </PanelBody>
+
         {/* ===== HOVER EFFECTS ===== */}
         <PanelBody title="Hover Effects" initialOpen={false}>
           <RangeControl
@@ -1268,9 +1682,8 @@ export default function Edit({ attributes, setAttributes }) {
             options={[
               { label: "-- Choose a bubble --", value: "" },
               ...(timelineSteps || []).map((s) => ({
-                label: `${s.id} - ${
-                  (phases || {})[s.phase]?.name || s.phase
-                } (x:${s.x})`,
+                label: `${s.id} - ${(phases || {})[s.phase]?.name || s.phase
+                  } (x:${s.x})`,
                 value: s.id,
               })),
             ]}
@@ -1282,7 +1695,7 @@ export default function Edit({ attributes, setAttributes }) {
               <SelectControl
                 label="Phase"
                 value={currentStep.phase}
-                options={phaseKeys.map((k) => ({
+                options={phaseOrder.map((k) => ({
                   label: (phases || DEFAULT_PHASES)[k]?.name || k,
                   value: k,
                 }))}
@@ -1305,30 +1718,20 @@ export default function Edit({ attributes, setAttributes }) {
                 step={0.1}
               />
 
-              {/* Preface descriptions */}
+              {/* Unified descriptions */}
               <BubbleTaskEditor
-                label="Preface"
-                tasks={currentStep.preface}
+                tasks={currentStep.descriptions ?? currentStep.preface ?? currentStep.client}
                 stepId={currentStep.id}
                 stepX={currentStep.x}
-                side="preface"
                 updateStep={updateStep}
-              />
-
-              {/* Client descriptions */}
-              <BubbleTaskEditor
-                label="Client"
-                tasks={currentStep.client}
-                stepId={currentStep.id}
-                stepX={currentStep.x}
-                side="client"
-                updateStep={updateStep}
+                legacyPreface={currentStep.preface}
+                legacyClient={currentStep.client}
               />
 
               <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
                 <Button
                   variant="primary"
-                  onClick={() => {}}
+                  onClick={() => { }}
                   style={{ flex: 1 }}
                   disabled>
                   Auto-saved
@@ -1363,6 +1766,7 @@ export default function Edit({ attributes, setAttributes }) {
             onOverwrite={saveVersion}
             onImport={importVersions}
             onExport={exportVersions}
+            onImportHeadings={importFromHeadings}
           />
         </PanelBody>
       </InspectorControls>
@@ -1429,9 +1833,8 @@ export default function Edit({ attributes, setAttributes }) {
           )}
         </div>
         <div
-          className={`ppt-timeline-wrapper ppt-timeline-wrapper--${previewMode}${
-            editMode ? " edit-mode" : ""
-          }${isCarrying ? " carrying" : ""}`}
+          className={`ppt-timeline-wrapper ppt-timeline-wrapper--${previewMode}${editMode ? " edit-mode" : ""
+            }${isCarrying ? " carrying" : ""}`}
           ref={containerRef}
         />
       </div>
@@ -1441,51 +1844,57 @@ export default function Edit({ attributes, setAttributes }) {
 
 /* ========== Bubble Task Editor Sub-component ========== */
 
-function BubbleTaskEditor({ label, tasks, stepId, stepX, side, updateStep }) {
-  const taskArray = tasks ? (Array.isArray(tasks) ? tasks : [tasks]) : [];
+function BubbleTaskEditor({ tasks, stepId, stepX, updateStep, legacyPreface, legacyClient }) {
+  // Resolve task array: prefer descriptions, fall back to legacy preface+client merge
+  let taskArray;
+  if (tasks !== undefined && !legacyPreface && !legacyClient) {
+    taskArray = tasks ? (Array.isArray(tasks) ? tasks : [tasks]) : [];
+  } else if (legacyPreface || legacyClient) {
+    const pre = legacyPreface ? (Array.isArray(legacyPreface) ? legacyPreface : [legacyPreface]) : [];
+    const cli = legacyClient ? (Array.isArray(legacyClient) ? legacyClient : [legacyClient]) : [];
+    taskArray = [...pre, ...cli];
+  } else {
+    taskArray = tasks ? (Array.isArray(tasks) ? tasks : [tasks]) : [];
+  }
+
+  const saveDescs = (newArr) => {
+    if (newArr.length === 0) {
+      updateStep(stepId, { descriptions: undefined, preface: undefined, client: undefined });
+    } else {
+      updateStep(stepId, { descriptions: newArr, preface: undefined, client: undefined });
+    }
+  };
 
   const updateTask = (index, field, value) => {
     const newArr = [...taskArray];
     newArr[index] = { ...newArr[index], [field]: value };
-    const result = newArr.length === 1 ? newArr[0] : newArr;
-    updateStep(stepId, { [side]: result });
+    saveDescs(newArr);
   };
 
   const addTask = () => {
-    const defaultLineY =
-      side === "preface"
-        ? -7 - taskArray.length * 1.5
-        : 7 + taskArray.length * 1.5;
+    const idx = taskArray.length;
+    // Alternate above/below: even index = above (negative), odd = below (positive)
+    const defaultLineY = idx % 2 === 0 ? -7 - Math.floor(idx / 2) * 1.5 : 7 + Math.floor(idx / 2) * 1.5;
     const newTask = {
-      label: "New Task",
+      label: "New Description",
       fontSize: "M",
       fontWeight: "regular",
       lineX: stepX,
       lineY: defaultLineY,
       anchor: 0,
     };
-    const newArr = [...taskArray, newTask];
-    const result = newArr.length === 1 ? newArr[0] : newArr;
-    updateStep(stepId, { [side]: result });
+    saveDescs([...taskArray, newTask]);
   };
 
   const removeTask = (index) => {
-    const newArr = taskArray.filter((_, i) => i !== index);
-    if (newArr.length === 0) {
-      updateStep(stepId, { [side]: undefined });
-    } else {
-      const result = newArr.length === 1 ? newArr[0] : newArr;
-      updateStep(stepId, { [side]: result });
-    }
+    saveDescs(taskArray.filter((_, i) => i !== index));
   };
 
   return (
     <div className="ppt-task-section">
       <div className="ppt-task-section-header">
-        <strong>
-          {label} Descriptions ({taskArray.length})
-        </strong>
-        {taskArray.length < 3 && (
+        <strong>Descriptions ({taskArray.length})</strong>
+        {taskArray.length < 6 && (
           <Button variant="link" onClick={addTask} size="small">
             + Add
           </Button>
@@ -1495,7 +1904,7 @@ function BubbleTaskEditor({ label, tasks, stepId, stepX, side, updateStep }) {
         <div key={idx} className="ppt-task-item">
           <div className="ppt-task-item-header">
             <span>
-              {label} {idx + 1}
+              {task.lineY < 0 ? "↑ Above" : "↓ Below"} {idx + 1}
             </span>
             <Button
               variant="link"
@@ -1543,7 +1952,7 @@ function BubbleTaskEditor({ label, tasks, stepId, stepX, side, updateStep }) {
             step={0.1}
           />
           <RangeControl
-            label="Line Y"
+            label="Line Y (neg = above, pos = below)"
             value={task.lineY ?? 0}
             onChange={(val) => updateTask(idx, "lineY", val)}
             min={-15}
@@ -1575,6 +1984,7 @@ function VersionManager({
   onOverwrite,
   onImport,
   onExport,
+  onImportHeadings,
 }) {
   const [versionName, setVersionName] = useState("");
 
@@ -1605,9 +2015,8 @@ function VersionManager({
           {versionKeys.map((name) => (
             <div
               key={name}
-              className={`ppt-version-item ${
-                name === activeVersion ? "active" : ""
-              }`}>
+              className={`ppt-version-item ${name === activeVersion ? "active" : ""
+                }`}>
               <Button
                 variant={name === activeVersion ? "primary" : "secondary"}
                 onClick={() => onLoad(name)}
@@ -1633,7 +2042,18 @@ function VersionManager({
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+      <div style={{ marginTop: "10px" }}>
+        <Button
+          variant="secondary"
+          onClick={onImportHeadings}
+          size="small"
+          style={{ width: "100%" }}
+          title="Scannt H2–H6 Überschriften der Seite und erstellt daraus eine neue Version">
+          🔍 Aus Seitenstruktur
+        </Button>
+      </div>
+
+      <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
         <Button
           variant="secondary"
           onClick={onImport}
